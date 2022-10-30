@@ -1,0 +1,24 @@
+[submodule "arduino/lib/_FreeRTOS"]
+	path = arduino/lib/_FreeRTOS
+	url = https://github.com/feilipu/Arduino_FreeRTOS_Library.git
+[submodule "esp/lib/_NTPClient"]
+	path = esp/lib/_NTPClient
+	url = https://github.com/arduino-libraries/NTPClient.git
+[submodule "esp/lib/_ArduinoJson"]
+	path = esp/lib/_ArduinoJson
+	url = https://github.com/bblanchon/ArduinoJson.git
+[submodule "esp/lib/_AsyncMqttClient"]
+	path = esp/lib/_AsyncMqttClient
+	url = https://github.com/marvinroger/async-mqtt-client.git
+[submodule "esp/lib/_AsyncTCP"]
+	path = esp/lib/_AsyncTCP
+	url = https://github.com/me-no-dev/AsyncTCP
+[submodule "esp/lib/_AsyncWebServer"]
+	path = esp/lib/_AsyncWebServer
+	url = https://github.com/me-no-dev/ESPAsyncWebServer.git
+[submodule "esp/lib/_Ticker"]
+	path = esp/lib/_Ticker
+	url = https://github.com/sstaub/Ticker.git
+[submodule "esp/lib/_WiFiManager"]
+	path = esp/lib/_WiFiManager
+	url = https://github.com/tzapu/WiFiManager.git

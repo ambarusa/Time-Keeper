@@ -1,0 +1,170 @@
+<html>
+
+<head>
+    <title>%DEV_NAME% - Settings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="utf-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <script src="settings.js"></script>
+
+    <div class="topnav">
+        <a href="/">Home</a>
+        <a class="active" href="/settings">Settings</a>
+        <a href="#about">About</a>
+    </div>
+
+    <div class="topnav">
+        <h1>Settings</h1>
+    </div>
+    <div class="content">
+        <div class="card">
+            <h2>TIME CONFIGURATION</h2>
+            <p class="state">Displayed time: <span id="time">%TIME%</span></p>
+            <form action="/save_config" method="post" id="time_form">
+                <input type="hidden" name="TIME">
+
+                <label for="ntp_tz">Timezone</label>
+                <select id="ntp_tz" name="tz" form="time_form">
+                    <option value="none" selected disabled hidden>%NTP_TZ%</option>
+                    <option value="-12">(GMT -12:00) Eniwetok, Kwajalein</option>
+                    <option value="-11">(GMT -11:00) Midway Island, Samoa</option>
+                    <option value="-10">(GMT -10:00) Hawaii</option>
+                    <option value="-9">(GMT -9:00) Alaska</option>
+                    <option value="-8">(GMT -8:00) Pacific Time (US &amp; Canada)</option>
+                    <option value="-7">(GMT -7:00) Mountain Time (US &amp; Canada)</option>
+                    <option value="-6">(GMT -6:00) Central Time (US &amp; Canada), Mexico City</option>
+                    <option value="-5">(GMT -5:00) Eastern Time (US &amp; Canada), Bogota, Lima</option>
+                    <option value="-4">(GMT -4:00) Atlantic Time (Canada), Caracas, La Paz</option>
+                    <option value="-3">(GMT -3:00) Brazil, Buenos Aires, Georgetown</option>
+                    <option value="-2">(GMT -2:00) Mid-Atlantic</option>
+                    <option value="-1">(GMT -1:00) Azores, Cape Verde Islands</option>
+                    <option value="0">(GMT) Western Europe Time, London, Lisbon, Casablanca</option>
+                    <option value="1">(GMT +1:00) Brussels, Copenhagen, Madrid, Paris</option>
+                    <option value="2">(GMT +2:00) Kaliningrad, South Africa</option>
+                    <option value="3">(GMT +3:00) Baghdad, Riyadh, Moscow, St. Petersburg</option>
+                    <option value="4">(GMT +4:00) Abu Dhabi, Muscat, Baku, Tbilisi</option>
+                    <option value="5">(GMT +5:00) Ekaterinburg, Islamabad, Karachi, Tashkent</option>
+                    <option value="6">(GMT +6:00) Almaty, Dhaka, Colombo</option>
+                    <option value="7">(GMT +7:00) Bangkok, Hanoi, Jakarta</option>
+                    <option value="8">(GMT +8:00) Beijing, Perth, Singapore, Hong Kong</option>
+                    <option value="9">(GMT +9:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk</option>
+                    <option value="10">(GMT +10:00) Eastern Australia, Guam, Vladivostok</option>
+                    <option value="11">(GMT +11:00) Magadan, Solomon Islands, New Caledonia</option>
+                    <option value="12">(GMT +12:00) Auckland, Wellington, Fiji, Kamchatka</option>
+                    <option value="13">(GMT +13:00) Apia, Nukualofa</option>
+                    <option value="14">(GMT +14:00) Line Islands, Tokelau</option>
+                </select>
+
+                <label for="manual_mode">Use this device's time</label>
+                <input type='hidden' value='0' name='manual'>
+                <input type="checkbox" name='manual' id="manual_mode" %MANUAL_MODE%>
+
+                <div id="ntp_fields">
+                    <label for="ntp_server">NTP Server</label>
+                    <input type="text" id="ntp_server" name="server" value="%NTP_SERVER%">
+                    <p><small></small></p>
+                </div>
+
+                <p><input type="submit" class="button" value="Submit"></p>
+            </form>
+        </div>
+        <div class="card">
+            <h2>MQTT</h2>
+            <p class="state"><span id="mqtt_status">%MQTT_STATUS%</span></p>
+            <form action="save_config" method="post" id="mqtt_form">
+                <input type="hidden" name="MQTT">
+
+                <label for="mqtt_en">Enabled</label>
+                <input type="hidden" name="enabled" value="0">
+                <input type="checkbox" id="mqtt_en" name="enabled" value="1" %MQTT_EN%>
+
+                <br>
+
+                <div id="mqtt_fields">
+                    <label for="mqtt_host">Host</label>
+                    <input type="text" id="mqtt_host" name="host" value="%MQTT_HOST%">
+                    <p><small></small></p>
+
+                    <br>
+
+                    <label for="mqtt_port">Port</label>
+                    <input type="number" id="mqtt_port" name="port" value="%MQTT_PORT%">
+                    <p><small></small></p>
+
+                    <br>
+
+                    <label for="qossub">Subscribe QoS</label>
+                    <select id="qossub" name="qossub" form="mqtt_form">
+                        <option value="none" selected disabled hidden>%MQTT_QOSSUB%</option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+
+                    <label for="qospub">Publish QoS</label>
+                    <select id="qospub" name="qospub" form="mqtt_form">
+                        <option value="none" selected disabled hidden>%MQTT_QOSPUB%</option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+
+                    <br>
+
+                    <label for="mqtt_cli">Client ID</label>
+                    <input type="text" id="mqtt_cli" name="clientid" value="%MQTT_CLI%">
+                    <p><small></small></p>
+
+                    <br>
+
+                    <label for="mqtt_user">Username</label>
+                    <input type="text" id="mqtt_user" name="user" value="%MQTT_USER%">
+                    <p><small></small></p>
+
+                    <br>
+
+                    <label for="mqtt_pwd">Password</label>
+                    <input type="password" id="mqtt_pwd" name="pwd">
+                    <p><small>* Leave empty if no password is needed.</small></p>
+
+                    <br>
+                    <br>
+
+                    <label for="mqtt_autodisc">Autodiscovery topic</label>
+                    <input type="text" id="mqtt_autodisc" name="autodisc" value="%MQTT_AUTODISC%">
+                    <p><small>* Leave empty for no autodiscovery.</small></p>
+                </div>
+
+                <p><input type="submit" class="button" value="Submit"></p>
+            </form>
+        </div>
+        <div class="card">
+            <h2>Wi-Fi</h2>
+            <p class="state">#TBD#</p>
+            <form action="save_config" method="post" id="wifi_form">
+                <input type="hidden" name="Wi-Fi">
+
+                <label for="wifi_ssid">SSID</label>
+                <input type="text" id="wifi_ssid" name="ssid" value="%WIFI_SSID%">
+                <p><small></small></p>
+
+                <br>
+
+                <label for="wifi_pwd">Password</label>
+                <input type="password" id="wifi_pwd" name="pwd">
+                <p><small>* Leave empty if no password is needed.</small></p>
+                <p><input type="submit" class="button" value="Submit"></p>
+
+            </form>
+        </div>
+        <div class="card">
+            <h2>RESET</h2>
+            <p class="state">Reset the device, including the Wi-Fi</p>
+            <p><button id="reset_sw" class="button">RESET</button></p>
+        </div>
+    </div>
+</body>
+
+</html>
