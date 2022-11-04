@@ -10,18 +10,17 @@
 #define SERIAL_SYNC_FRAME 0x55
 #define SERIAL_MESSAGE_LENGTH 7
 
-Ticker device_restart_ticker([]
-                             { ESP.restart(); },
-                             1000, 1);
+Ticker device_restart_ticker([] { ESP.restart(); },
+                             2000, 1);
 
-bool reset_button_u8 = true; /**<Variable that contains the Reset Button's state */
-bool send_data_b;
+boolean reset_button_u8 = true; /**<Variable that contains the Reset Button's state */
+boolean send_data_b;
 
 void Restart_device()
 {
     uint8_t restart_flg_u8 = 1;
     Memory_write((char *)&restart_flg_u8, EEPROM_RESTART_FLG_ADDR, sizeof(restart_flg_u8));
-
+    Disable_WifiDisconnectHandler();
 #ifdef DEBUG
     Serial.println("\nHardware: The device will now restart...\n");
 #endif
@@ -68,59 +67,69 @@ void Read_inputs()
 
 void Serial_send_message()
 {
-    static uint8_t bytes_sent_u8;
+    static uint8_t checksum_u8, checksum_old_u8, bytes_sent_u8;
+
+    if (!send_data_b)
+        return;
+
     esp_states_t states_u24 = Get_esp_states();
     timestamp_t timestamp_u32 = Get_timestamp();
-    if (send_data_b)
+    checksum_u8 = states_u24.lightBrightness + states_u24.state +
+                  timestamp_u32.timestamp_byte3 + timestamp_u32.timestamp_byte2 +
+                  timestamp_u32.timestamp_byte1 + timestamp_u32.timestamp_byte0;
+
+    if (!bytes_sent_u8 && checksum_u8 == checksum_old_u8)
+        return;
+
+    switch (bytes_sent_u8)
     {
-        switch (bytes_sent_u8)
-        {
-        case 0:
-            Serial.write(SERIAL_SYNC_FRAME);
-            break;
-        case 1:
-            Serial.write(states_u24.checkSum);
-            break;
-        case 2:
-            Serial.write(states_u24.lightBrightness);
-            break;
-        case 3:
-            Serial.write(states_u24.state);
-            break;
-        case 4:
-            Serial.write(timestamp_u32.timestamp_byte3);
-            break;
-        case 5:
-            Serial.write(timestamp_u32.timestamp_byte2);
-            break;
-        case 6:
-            Serial.write(timestamp_u32.timestamp_byte1);
-            break;
-        case 7:
-            Serial.write(timestamp_u32.timestamp_byte0);
-            break;
-        default:
-            break;
-        }
-        bytes_sent_u8++;
-        if (bytes_sent_u8 > SERIAL_MESSAGE_LENGTH)
-        {
+    case 0:
+        Serial.write(SERIAL_SYNC_FRAME);
+        break;
+    case 1:
+        Serial.write(checksum_u8);
+        break;
+    case 2:
+        Serial.write(states_u24.lightBrightness);
+        break;
+    case 3:
+        Serial.write(states_u24.state);
+        break;
+    case 4:
+        Serial.write(timestamp_u32.timestamp_byte3);
+        break;
+    case 5:
+        Serial.write(timestamp_u32.timestamp_byte2);
+        break;
+    case 6:
+        Serial.write(timestamp_u32.timestamp_byte1);
+        break;
+    case 7:
+        Serial.write(timestamp_u32.timestamp_byte0);
+        break;
+    default:
+        break;
+    }
+    bytes_sent_u8++;
+    if (bytes_sent_u8 > SERIAL_MESSAGE_LENGTH)
+    {
 #if defined(DEBUG)
-            Serial.print("| Mode: ");
-            Serial.print(Get_light_mode_str());
-            Serial.print("| Intensity: ");
-            Serial.print(states_u24.lightBrightness);
-            Serial.print("| Clock State: ");
-            Serial.print(Get_clock_state_str());
-            Serial.print("| Timestamp: ");
-            Serial.print(timestamp_u32.timestamp);
-            Serial.println(" |");
+        Serial.print("\n| Mode: ");
+        Serial.print(Get_light_mode_str());
+        Serial.print("| Intensity: ");
+        Serial.print(states_u24.lightBrightness);
+        Serial.print("| Clock State: ");
+        Serial.print(Get_clock_state_str());
+        Serial.print("| Timestamp: ");
+        Serial.print(timestamp_u32.timestamp);
+        Serial.println(" |");
 #endif
-            bytes_sent_u8 = 0;
-            send_data_b = false;
-        }
+        bytes_sent_u8 = 0;
+        send_data_b = false;
+        checksum_old_u8 = checksum_u8;
     }
 }
+
 void Hardware_init()
 {
     pinMode(RESET_SW_PIN, INPUT_PULLUP);
@@ -157,9 +166,7 @@ void Hardware_20ms_task()
         Restart_device();
     }
 
-#ifndef DEBUG
     Serial_send_message();
-#endif
 }
 
 /**
@@ -171,7 +178,7 @@ void Hardware_20ms_task()
 void Hardware_1000ms_task()
 {
     send_data_b = true;
-    
+
     static boolean ledState;
     ledState = !ledState;
     digitalWrite(LED_BUILTIN, ledState);

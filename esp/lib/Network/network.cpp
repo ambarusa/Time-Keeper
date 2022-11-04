@@ -10,7 +10,7 @@ WiFiManager wm;                         /**< Wi-Fi manager object. */
 WiFiEventHandler wifiConnectHandler;    /**< Handling Wi-Fi connect event. */
 WiFiEventHandler wifiDisconnectHandler; /**< Handling Wi-Fi disconnect event. */
 
-const char *hostname = DEVICE_NAME;     /**< The device's hostname. */
+const char *hostname = DEVICE_NAME; /**< The device's hostname. */
 
 void OTA_init()
 {
@@ -29,7 +29,7 @@ void OTA_init()
 #ifdef DEBUG
                      Serial.println("Network: OTA updating ended");
 #endif 
-                    });
+                  Restart_device(); });
 #ifdef DEBUG
    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
                          { Serial.printf("Network: OTA update progress: %u%%\r", (progress / (total / 100))); });
@@ -49,7 +49,7 @@ void OTA_init()
       else if (error == OTA_END_ERROR)
          Serial.println("End Failed");
 #endif
-                    Restart_device(); });
+                   Restart_device(); });
 
    ArduinoOTA.begin();
 #ifdef DEBUG
@@ -145,6 +145,11 @@ void Set_wifi_credentials(String ssid, String pwd)
 #ifdef DEBUG
    Serial.printf("Network: Connecting to new Wi-Fi: %s\n", ssid.c_str());
 #endif
+}
+
+void Disable_WifiDisconnectHandler()
+{
+   wifiDisconnectHandler = NULL;
 }
 
 void Network_100ms_task()

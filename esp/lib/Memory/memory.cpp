@@ -29,7 +29,7 @@ void Memory_init()
 
         Memory_write((char *)&(buffer_u8 = 0), EEPROM_RESTART_FLG_ADDR, sizeof(buffer_u8));
         Memory_write((char *)&(buffer_u8 = 1), EEPROM_MANUAL_MODE_ADDR, sizeof(buffer_u8));
-        Memory_write((char *)&(buffer_u8 = LIGHT_MODE_MANUAL), EEPROM_LIGHT_MODE_ADDR, sizeof(buffer_u8));
+        Memory_write((char *)&(buffer_u8 = 0), EEPROM_ESP_STATE_ADDR, sizeof(buffer_u8));
         Memory_write((char *)&(buffer_u8 = 85), EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(buffer_u8));
         Memory_write((char *)&(buffer_u8 = 0), EEPROM_TIMEZONE_ADDRESS, sizeof(buffer_u8));
         strcpy(buffer, "0.europe.pool.ntp.org");
@@ -45,6 +45,8 @@ void Memory_init()
         Memory_write(buffer, EEPROM_MQTT_PWD_ADDR, EEPROM_MQTT_PWD_SIZE);
         Memory_write((char *)&(buffer_u8 = 1), EEPROM_MQTT_QOSSUB_ADDR, sizeof(buffer_u8));
         Memory_write((char *)&(buffer_u8 = 1), EEPROM_MQTT_QOSPUB_ADDR, sizeof(buffer_u8));
+        for (int i = 0; i < EEPROM_TIMESTAMP_SIZE; i++)
+            Memory_write((char *)&(buffer_u8 = 0), EEPROM_TIMESTAMP_ADDR + i, sizeof(buffer_u8));
 #ifdef DEBUG
         Serial.println("\nMemory: Memory wasn't initialized. Initalizing now.\n");
 #endif

@@ -17,8 +17,8 @@ char mqtt_clientid[EEPROM_MQTT_CLIENTID_SIZE];
 char mqtt_username[EEPROM_MQTT_USER_SIZE];
 char mqtt_password[EEPROM_MQTT_PWD_SIZE];
 uint16_t mqtt_port_u16;
-uint8 qossub;
-uint8 qospub;
+uint8_t qossub;
+uint8_t qospub;
 
 const char *mqtt_birth_payload = "online";
 const char *mqtt_will_payload = "offline";

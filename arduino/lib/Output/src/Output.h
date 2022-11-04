@@ -3,7 +3,7 @@
 
 #include "Definitions.h"
 
-void DisplayInit();
+void Output_init();
 
 /**
  * @brief Function implementation for processing output buffer

@@ -11,14 +11,6 @@ function initWebSocket() {
 }
 
 function initSwitch() {
-    // document.getElementById('sf_pw_sw').addEventListener('click', function () {
-    //     websocket.send((this.checked) ? "SF_POWER ON " : "SF_POWER OFF ");
-    // });
-
-    // document.getElementById('sf_st_sw').addEventListener('click', function () {
-    //     websocket.send((this.checked) ? "SF_STEAM ON " : "SF_STEAM OFF ");
-    // });
-
     document.getElementById('reset_sw').addEventListener('click', function () {
         if (confirm('This will reset everything. Continue?')) {
 
@@ -43,9 +35,6 @@ function onMessage(event) {
     var first = event.data.split(" ")[0];
     var second = event.data.split(" ")[1];
     switch (first) {
-        case "TIME":
-            document.getElementById("time").innerHTML = second;
-            break;
         case "MQTT":
             var text = event.data.slice(event.data.indexOf(" ") + 1);
             document.getElementById('mqtt_status').innerHTML = text;

@@ -3,23 +3,25 @@
 #include "Input.h"
 #include "Output.h"
 
-#define TASK_18MS_DELAY 1
-#define TASK_50MS_DELAY 3
-#define TASK_250MS_DELAY 15
+#define TASK_20MS_DELAY 20 / portTICK_PERIOD_MS
+#define TASK_50MS_DELAY 50 / portTICK_PERIOD_MS
+#define TASK_250MS_DELAY 250 / portTICK_PERIOD_MS
+#define TASK_1000MS_DELAY 1000 / portTICK_PERIOD_MS
 
-void task18ms(void *pvParameters);
+void task20ms(void *pvParameters);
 void task50ms(void *pvParameters);
 void task250ms(void *pvParameters);
+void task1000ms(void *pvParameters);
 
 void setup()
 {
-   Serial.begin(9600);
-   LightSensorInit();
-   DisplayInit();
+   Input_init();
+   Output_init();
 
-   xTaskCreate(task18ms, (const char *)"task18ms", 128, NULL, 3, NULL);
+   xTaskCreate(task20ms, (const char *)"task20ms", 128, NULL, 3, NULL);
    xTaskCreate(task50ms, (const char *)"task50ms", 128, NULL, 3, NULL);
    xTaskCreate(task250ms, (const char *)"task250ms", 128, NULL, 3, NULL);
+   xTaskCreate(task1000ms, (const char *)"task1000ms", 128, NULL, 3, NULL);
 }
 
 /**
@@ -28,15 +30,30 @@ void setup()
  * Implementation of function that handle the 18ms requests.
  * @return void
  */
-void task18ms(void *pvParameters)
+void task20ms(void *pvParameters)
 {
    while (true)
    {
-      InputCyclic();
+      Input_20ms_task();
 #if defined(FLEURIE)
       Enable_Display();
 #endif
-      vTaskDelay(TASK_18MS_DELAY);
+      vTaskDelay(TASK_20MS_DELAY);
+   }
+}
+
+/**
+ * @brief Implementation of function that handle the 50ms requests.
+ *
+ * Implementation of function that handle the 50ms requests.
+ * @return void
+ */
+void task50ms(void *pvParameters)
+{
+   while (true)
+   {
+      ClockPacked();
+      vTaskDelay(TASK_50MS_DELAY);
    }
 }
 
@@ -55,18 +72,12 @@ void task250ms(void *pvParameters)
    }
 }
 
-/**
- * @brief Implementation of function that handle the 50ms requests.
- *
- * Implementation of function that handle the 50ms requests.
- * @return void
- */
-void task50ms(void *pvParameters)
+void task1000ms(void *pvParameters)
 {
    while (true)
    {
-      ClockPacked();
-      vTaskDelay(TASK_50MS_DELAY);
+      Input_1000ms_task();
+      vTaskDelay(TASK_1000MS_DELAY);
    }
 }
 

@@ -39,7 +39,7 @@ AsyncWebSocket websocket("/ws");
 
 String processor(const String &var);
 
-void handleWebSocketMessage(void *arg, uint8 *data, size_t len)
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 {
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
@@ -95,7 +95,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
                 if (value.toInt())
                 {
                     Set_manual_mode(true);
-                    Set_timestamp(value.toInt());
+                    Set_timestamp(CLOCK_STATE_VALID, value.toInt());
                 }
                 else
                     Set_manual_mode(false);
@@ -156,7 +156,7 @@ void onResetConfig(AsyncWebServerRequest *request)
 }
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
-             void *arg, uint8 *data, size_t len)
+             void *arg, uint8_t *data, size_t len)
 {
     switch (type)
     {
@@ -254,8 +254,6 @@ String processor(const String &var)
         return String(DEVICE_NAME);
     else if (var == "LIGHT_FORM")
         return light_form;
-    else if (var == "TIME")
-        return Get_time_formatted();
     else if (var == "BRIGHTNESS_PCT")
         return String(Get_esp_states().lightBrightness);
     else if (var == "MANUAL_MODE")

@@ -22,7 +22,7 @@ static uint8_t sb_maskBlink = 0;
  */
 static bool b_flag_Blink = 0;
 
-void DisplayInit()
+void Output_init()
 {
 	pinMode(EN_SOD_VFDOUT, OUTPUT);
 	pinMode(EN_SOD_VFCLK, OUTPUT);
@@ -63,7 +63,7 @@ void ClockPacked()
 			MessageDisplay01MinTimeout_u16 = 0;
 			MessageDisplay01SecTimeout_u16 = 0;
 		}
-		if (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT)
+		if (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT || !mainBuffer.timestamp)
 		{
 			PackedDisplayData.hour_ten_digit_st_ui8 = digit_seg_ui8[25];	// n
 			PackedDisplayData.hour_unit_digit_st_ui8 = digit_seg_ui8[15];	// E
@@ -300,7 +300,7 @@ void TurnOffDisplay()
 	DisplayData.second_data = 0xFF;
 }
 
-void DisplayInit()
+void Output_init()
 {
 #if defined(FOUR_DIGITS)
 	pinMode(EN_COLON, OUTPUT);
