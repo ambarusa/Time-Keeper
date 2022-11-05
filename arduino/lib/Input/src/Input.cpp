@@ -8,7 +8,7 @@
 #define SERIAL_SYNC_FRAME 0x55 /**<First received byte to synchronize input data.*/
 #define SERIAL_MESSAGE_LENGTH 7
 
-main_buffer_t mainBuffer;
+volatile main_buffer_t mainBuffer;
 
 /**
  * @brief Init function of the LM393 light sensor.
@@ -194,16 +194,6 @@ void Input_20ms_task()
 
 void Input_1000ms_task()
 {
-    Serial.print("| Mode: ");
-    Serial.print(mainBuffer.esp_states.lightMode);
-    Serial.print("| Intensity: ");
-    Serial.print(mainBuffer.esp_states.lightBrightness);
-    Serial.print("| Clock State: ");
-    Serial.print(Get_clock_state_str());
-    Serial.print("| Timestamp: ");
-    Serial.print(mainBuffer.timestamp);
-    Serial.println(" |");
-
     if (mainBuffer.esp_states.clockState > CLOCK_STATE_IP)
         Process_time(mainBuffer.timestamp + 1);
 }

@@ -82,7 +82,7 @@ typedef struct
     esp_states_t esp_states;
 } main_buffer_t;
 
-extern main_buffer_t mainBuffer; /**< Main global buffer. */
+extern volatile main_buffer_t mainBuffer; /**< Main global buffer. */
 
 #if defined(FLEURIE)
 /**

@@ -280,14 +280,7 @@ void Enable_Display()
 		lub_valuebrightness--;
 		lb_deltavalueLight--;
 	}
-	if (sb_maskBlink)
-	{
-		analogWrite(EN_SOD_VFBLANK, BRIGHTNESS_ZERO); /* Blinking and blink flag = 1*/
-	}
-	else
-	{
-		analogWrite(EN_SOD_VFBLANK, lub_valuebrightness);
-	}
+	analogWrite(EN_SOD_VFBLANK, (sb_maskBlink) ? BRIGHTNESS_ZERO : lub_valuebrightness);
 }
 
 #elif defined(PIXIE)
