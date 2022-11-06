@@ -155,6 +155,22 @@ function onLoad(event) {
             mqtt_form.submit();
         }
     });
+
+    /* Handling Wi-Fi Form */
+    const wifi_form = document.getElementById('wifi_form');
+    wifi_form.addEventListener('submit', (event) => {
+
+        // stop form submission
+        event.preventDefault();
+
+        // validate the form
+        let ssidValid = hasValue(wifi_form.elements['wifi_ssid'], VALUE_REQUIRED);
+
+        // if valid, submit the form.
+        if (ssidValid) {
+            wifi_form.submit();
+        }
+    });
 }
 
 window.addEventListener('load', onLoad);

@@ -3,7 +3,7 @@
 
 ## Arduino
 
-Download the latest precompiled [`firmware.hex`](https://github.com/ambarusa/Time-Keeper/tree/master/build) file from one of the `atm328_xxx` directories (depending on your clock type), and flash it with this UI:
+Download the latest precompiled [`firmware.hex`](https://github.com/ambarusa/Time-Keeper/tree/master/build) file from one of the `atm328p_xxx` directories (depending on your clock type), and flash it with this UI:
 
 - AVRDUDESS ([Releases](https://github.com/ZakKemble/AVRDUDESS/releases))
 

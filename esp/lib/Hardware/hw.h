@@ -8,7 +8,7 @@ void Hardware_init();
 void Hardware_20ms_task();
 void Hardware_1000ms_task();
 
-void Restart_device();
+void Restart_device(boolean soft_b);
 
 extern boolean Get_reset_button_state();
 extern String Get_reset_button_state_str();

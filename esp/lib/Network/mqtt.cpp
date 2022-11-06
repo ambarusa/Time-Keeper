@@ -5,7 +5,7 @@
 #include "memory.h"
 #include "hw.h"
 
-Ticker mqtt_reconn_ticker(Mqtt_connect, 5000);
+Ticker mqtt_reconn_ticker(Mqtt_connect, 5000, 3);
 
 boolean mqtt_enabled_u8;
 String mqtt_status = "Not enabled.";

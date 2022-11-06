@@ -16,6 +16,3 @@
 [submodule "esp/lib/_Ticker"]
 	path = esp/lib/_Ticker
 	url = https://github.com/sstaub/Ticker.git
-[submodule "esp/lib/_WiFiManager"]
-	path = esp/lib/_WiFiManager
-	url = https://github.com/tzapu/WiFiManager.git

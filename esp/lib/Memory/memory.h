@@ -40,7 +40,6 @@
 #define EEPROM_TIMESTAMP_ADDR 182
 #define EEPROM_TIMESTAMP_SIZE 4
 
-
 void Memory_init();
 
 void Memory_reset();

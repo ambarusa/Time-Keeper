@@ -70,7 +70,6 @@ void onSaveConfig(AsyncWebServerRequest *request)
     request->send(LittleFS, "/save_config.html", "text/html", false, processor);
 
     String form_type, name, value, ssid;
-    boolean restart_needed_b = false;
 
     form_type = request->getParam(0)->name();
 #ifdef DEBUG
@@ -130,19 +129,18 @@ void onSaveConfig(AsyncWebServerRequest *request)
                 Set_mqtt_password(value.c_str());
             if (name == "autodisc")
                 Set_mqtt_autodiscovery(value);
-            restart_needed_b = true;
+            Restart_device(true);
         }
         if (form_type == "Wi-Fi")
         {
             if (name == "ssid")
                 ssid = value;
             if (name == "pwd")
-                Set_wifi_credentials(ssid, value);
-            restart_needed_b = true;
+                Set_wifi_credentials(ssid.c_str(), value.c_str());
+            Restart_device(false);
         }
     }
-    if (restart_needed_b)
-        Restart_device();
+
 }
 
 void onResetConfig(AsyncWebServerRequest *request)
@@ -152,7 +150,7 @@ void onResetConfig(AsyncWebServerRequest *request)
     Memory_reset();
     Network_reset();
 
-    Restart_device();
+    Restart_device(false);
 }
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
@@ -280,5 +278,9 @@ String processor(const String &var)
         return Get_mqtt_username();
     else if (var == "MQTT_AUTODISC")
         return Get_mqtt_autodiscovery();
+    else if (var == "WIFI_STATUS")
+        return Get_wifi_status();
+    else if (var == "WIFI_SSID")
+        return Get_wifi_ssid();
     return "";
 }

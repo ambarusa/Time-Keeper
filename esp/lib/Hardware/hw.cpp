@@ -10,16 +10,20 @@
 #define SERIAL_SYNC_FRAME 0x55
 #define SERIAL_MESSAGE_LENGTH 7
 
-Ticker device_restart_ticker([] { ESP.restart(); },
+Ticker device_restart_ticker([]
+                             { ESP.restart(); },
                              2000, 1);
 
-boolean reset_button_u8 = true; /**<Variable that contains the Reset Button's state */
+boolean reset_button_u8 = HIGH; /**<Variable that contains the Reset Button's state */
 boolean send_data_b;
 
-void Restart_device()
+void Restart_device(boolean soft_b)
 {
-    uint8_t restart_flg_u8 = 1;
-    Memory_write((char *)&restart_flg_u8, EEPROM_RESTART_FLG_ADDR, sizeof(restart_flg_u8));
+    if (soft_b)
+    {
+        uint8_t restart_flg_u8 = 1;
+        Memory_write((char *)&restart_flg_u8, EEPROM_RESTART_FLG_ADDR, sizeof(restart_flg_u8));
+    }
     Disable_WifiDisconnectHandler();
 #ifdef DEBUG
     Serial.println("\nHardware: The device will now restart...\n");
@@ -50,7 +54,6 @@ void Read_inputs()
         else
         {
             state_old_b = state_current_b;
-            counter_u8 = RESET_TIMEOUT;
         }
     }
     else
@@ -146,10 +149,8 @@ void Hardware_init()
         Clock_skip_ip();
         Memory_write((char *)&(restart_flg_u8 = 0), EEPROM_RESTART_FLG_ADDR, sizeof(restart_flg_u8));
     }
-    else
-    {
-        reset_button_u8 = HIGH;
-    }
+
+    send_data_b = true;
 }
 
 void Hardware_20ms_task()
@@ -163,7 +164,7 @@ void Hardware_20ms_task()
         reset_button_u8 = !reset_button_u8;
         Memory_reset();
         Network_reset();
-        Restart_device();
+        Restart_device(true);
     }
 
     Serial_send_message();

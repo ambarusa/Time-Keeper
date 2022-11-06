@@ -254,7 +254,7 @@ void Clock_task_1000ms()
                 Memory_read((char *)&timestamp_u32, EEPROM_TIMESTAMP_ADDR, EEPROM_TIMESTAMP_SIZE);
             }
 
-            ip_state_timeout_u8 = TASK_06_SEC_TIMEOUT * 2;
+            ip_state_timeout_u8 = TASK_06_SEC_TIMEOUT * 2 - 1;
         }
         ip_state_timeout_u8--;
         break;
