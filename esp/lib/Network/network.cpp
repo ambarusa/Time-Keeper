@@ -15,7 +15,7 @@ String wifi_status = "Not connected.";
 
 void Network_create_AP();
 
-Ticker create_ap_ticker(Network_create_AP, 5000, 1);
+Ticker create_ap_ticker(Network_create_AP, 6000, 1);
 
 void OTA_init()
 {
@@ -93,7 +93,7 @@ void onWifiConnect(const WiFiEventStationModeGotIP &event)
    wifi_status = "Connected to " + WiFi.SSID();
    WiFi.setAutoReconnect(true);
    wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
-   MDNS.begin(DEVICE_NAME);
+   MDNS.notifyAPChange();
    OTA_init();
    Webserver_start();
    Set_clock_state(CLOCK_STATE_IP);
@@ -123,6 +123,7 @@ void Network_init()
    WiFi.mode(WIFI_STA);
    WiFi.setHostname(DEVICE_NAME);
    wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
+   MDNS.begin(DEVICE_NAME);
    WiFi.begin();
 }
 
@@ -150,15 +151,15 @@ String Get_wifi_ssid()
    return WiFi.SSID();
 }
 
-void Set_wifi_credentials(const char *ssid, const char *pwd)
+void Set_wifi_credentials(String ssid, String pwd)
 {
 #ifdef DEBUG
-   Serial.printf("Network: New Wi-Fi saved: %s\n", ssid);
+   Serial.printf("Network: New Wi-Fi saved: %s\n", ssid.c_str());
 #endif
    wifiDisconnectHandler = NULL;
    struct station_config conf;
-   memcpy(reinterpret_cast<char *>(conf.ssid), ssid, 32);
-   memcpy(reinterpret_cast<char *>(conf.password), pwd, 64);
+   memcpy(reinterpret_cast<char *>(conf.ssid), ssid.c_str(), 32);
+   memcpy(reinterpret_cast<char *>(conf.password), pwd.c_str(), 64);
    wifi_station_set_config(&conf);
 }
 
@@ -175,6 +176,7 @@ void Network_100ms_task()
       create_ap_ticker.start();
 
    ArduinoOTA.handle();
+   MDNS.update();
    Mqtt_100ms_task();
 }
 

@@ -5,7 +5,7 @@
 #include "network.h"
 
 #define HOUR_IN_SEC 3600 /**<Hour in seconds. */
-#define NTP_POLL_TIMEOUT 10 * 60
+#define NTP_POLL_TIMEOUT 20 * 60
 #define TASK_06_SEC_TIMEOUT 6
 
 uint32_t timestamp_u32;
@@ -171,11 +171,15 @@ void Set_clock_state(uint8_t value)
     if (esp_states_u24.clockState > CLOCK_STATE_IP)
         Memory_write((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8));
 }
-void Set_ntp_server(const char *server)
+void Set_ntp_server(String server)
 {
-    strcpy(ntp_server, server);
+    if (!strcmp(ntp_server, server.c_str()))
+        return;
+
+    strcpy(ntp_server, server.c_str());
     Memory_write(ntp_server, EEPROM_NTP_SERVER_ADDR, EEPROM_NTP_SERVER_SIZE);
 
+    ntp_client.setPoolServerName(ntp_server);
     if (!ntp_client.forceUpdate())
         ntp_client.begin();
     force_sync_b = true;
@@ -215,6 +219,7 @@ void Clock_init()
 
     if (!skip_ip_b)
     {
+        timestamp_u32 = 0;
         Set_lightBrightness(100);
         esp_states_u24.clockState = CLOCK_STATE_START;
     }
@@ -222,8 +227,6 @@ void Clock_init()
 
 void Clock_task_1000ms()
 {
-    ntp_client.update();
-
     switch (esp_states_u24.clockState)
     {
     case CLOCK_STATE_START:
@@ -250,7 +253,7 @@ void Clock_task_1000ms()
             }
             else
             {
-                Memory_read((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8));
+                Memory_read((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8_t));
                 Memory_read((char *)&timestamp_u32, EEPROM_TIMESTAMP_ADDR, EEPROM_TIMESTAMP_SIZE);
             }
 
@@ -267,7 +270,9 @@ void Clock_task_1000ms()
             if (ntp_client.isTimeSet())
             {
                 Set_clock_state(CLOCK_STATE_VALID);
-                timestamp_u32 = ntp_client.getEpochTime() + timezone_s8 * HOUR_IN_SEC;
+                uint32_t timestamp_new_u32 = ntp_client.getEpochTime() + timezone_s8 * HOUR_IN_SEC;
+                if (abs(int(timestamp_new_u32 - timestamp_u32)) < HOUR_IN_SEC || force_sync_b)
+                    timestamp_u32 = timestamp_new_u32;
                 sync_timeout_u16 = NTP_POLL_TIMEOUT;
                 force_sync_b = false;
             }
@@ -281,4 +286,8 @@ void Clock_task_1000ms()
     default:
         break;
     }
+
+    if (!manual_mode_b &&
+        (esp_states_u24.clockState == CLOCK_STATE_VALID || esp_states_u24.clockState == CLOCK_STATE_SERVER_DOWN))
+        ntp_client.update();
 }

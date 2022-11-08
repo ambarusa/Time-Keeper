@@ -40,6 +40,8 @@ void ClockPacked()
 {
 	static uint16_t MessageDisplay01SecTimeout_u16;
 	static uint16_t MessageDisplay01MinTimeout_u16;
+	static boolean wasValid_b;
+
 	switch (mainBuffer.esp_states.clockState)
 	{
 	case CLOCK_STATE_START: //    HELLO! message
@@ -63,7 +65,7 @@ void ClockPacked()
 			MessageDisplay01MinTimeout_u16 = 0;
 			MessageDisplay01SecTimeout_u16 = 0;
 		}
-		if (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT || !mainBuffer.timestamp)
+		if (MessageDisplay01SecTimeout_u16 < 3 * MESSAGE_DISPLAY_01_SEC_TIMEOUT || !wasValid_b)
 		{
 			PackedDisplayData.hour_ten_digit_st_ui8 = digit_seg_ui8[25];	// n
 			PackedDisplayData.hour_unit_digit_st_ui8 = digit_seg_ui8[15];	// E
@@ -93,7 +95,7 @@ void ClockPacked()
 			MessageDisplay01MinTimeout_u16 = 0;
 			MessageDisplay01SecTimeout_u16 = 0;
 		}
-		if (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT)
+		if (MessageDisplay01SecTimeout_u16 < 3 * MESSAGE_DISPLAY_01_SEC_TIMEOUT || !wasValid_b)
 		{
 			PackedDisplayData.hour_ten_digit_st_ui8 = digit_seg_ui8[18];	// C
 			PackedDisplayData.hour_unit_digit_st_ui8 = digit_seg_ui8[26];	// o
@@ -117,6 +119,7 @@ void ClockPacked()
 	};
 	case CLOCK_STATE_VALID: // All is Ok.
 	{
+		wasValid_b = true;
 		PackedDisplayData.hour_ten_digit_st_ui8 = digit_seg_ui8[mainBuffer.hour_ten];
 		PackedDisplayData.hour_unit_digit_st_ui8 = digit_seg_ui8[mainBuffer.hour_unit];
 		PackedDisplayData.minute_ten_digit_st_ui8 = digit_seg_ui8[mainBuffer.minute_ten];
@@ -321,6 +324,7 @@ void ClockPacked()
 {
 	static uint16_t MessageDisplay01SecTimeout_u16;
 	static uint16_t MessageDisplay15SecTimeout_u16;
+	static boolean wasValid_b;
 
 	if (mainBuffer.brightness == BRIGHTNESS_ZERO)
 	{
@@ -345,7 +349,7 @@ void ClockPacked()
 			MessageDisplay15SecTimeout_u16 = 0;
 			MessageDisplay01SecTimeout_u16 = 0;
 		}
-		if (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT)
+		if (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT || !wasValid_b)
 		{
 			TurnOffDisplay();
 			MessageDisplay01SecTimeout_u16++;
@@ -382,6 +386,7 @@ void ClockPacked()
 #endif
 	case CLOCK_STATE_VALID:
 	{
+		wasValid_b = true;
 #if defined(FOUR_DIGITS)
 		analogWrite(EN_COLON, (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT) << 4);
 		(++MessageDisplay01SecTimeout_u16) %= MESSAGE_DISPLAY_01_SEC_TIMEOUT * 2;

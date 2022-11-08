@@ -72,7 +72,7 @@ void Serial_send_message()
 {
     static uint8_t checksum_u8, checksum_old_u8, bytes_sent_u8;
 
-    if (!send_data_b)
+    if (!send_data_b && !bytes_sent_u8)
         return;
 
     esp_states_t states_u24 = Get_esp_states();
@@ -81,7 +81,7 @@ void Serial_send_message()
                   timestamp_u32.timestamp_byte3 + timestamp_u32.timestamp_byte2 +
                   timestamp_u32.timestamp_byte1 + timestamp_u32.timestamp_byte0;
 
-    if (!bytes_sent_u8 && checksum_u8 == checksum_old_u8)
+    if (checksum_u8 == checksum_old_u8)
         return;
 
     switch (bytes_sent_u8)

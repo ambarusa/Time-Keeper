@@ -102,7 +102,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
             if (name == "server")
             {
                 if (!Get_manual_mode())
-                    Set_ntp_server(value.c_str());
+                    Set_ntp_server(value);
             }
             if (name == "tz")
             {
