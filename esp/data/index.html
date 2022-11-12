@@ -1,34 +1,70 @@
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
-	<title>%DEV_NAME% - Home</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1" charset="utf-8">
-	<link rel="stylesheet" href="style.css">
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="style.css" rel="stylesheet">
+
+    <title>%DEV_NAME% - Home</title>
 </head>
 
 <body>
-	<script src="index.js"></script>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-3">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">%DEV_NAME%</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-3 mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/settings">Settings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-	<div class="topnav">
-		<a class="active" href="/">Home</a>
-		<a href="/settings">Settings</a>
-		<a href="#about">About</a>
-	</div>
+    <!-- Light -->
+    <div class="card w-50 mx-auto">
+        <h5 class="card-header">Light</h5>
+        <form class="card-body" id="light_form">
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="radio" name="light_mode" id="light_off">
+                <label class="form-check-label" for="light_off">OFF</label>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="radio" name="light_mode" id="light_automatic">
+                <label class="form-check-label" for="light_auto">Automatic</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="light_mode" id="light_manual">
+                <label class="form-check-label" for="light_manual">Manual</label>
+            </div>
+            <div class="form-check">
+                <input type="range" class="form-range" id="brightness" min="3" max="100" step="1"
+                    value="%BRIGHTNESS_PCT%">
+            </div>
+        </form>
+        <div class="d-grid col-6 mx-auto mb-3">
+            <button class="btn btn-primary btn-lg" id="light_submit">Submit</button>
+        </div>
+    </div>
 
-	<div class="topnav">
-		<h1>%DEV_NAME%</h1>
-	</div>
-	<div class="content">
-		<div class="card">
-			<h2>LIGHT</h2>
-			<form id="light_form">
-				%LIGHT_FORM%
-
-				<p><input class="button" id="light_submit" value="Submit"></p>
-			</form>
-		</div>
-
-	</div>
+    <script src="index.js"></script>
 </body>
 
 </html>

@@ -2,6 +2,7 @@ var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
 
 var timer, timestamp;
+var manual_mode, mqtt_enabled, ntp_fields, mqtt_fields;
 
 function initWebSocket() {
     websocket = new WebSocket(gateway);
@@ -42,47 +43,6 @@ function onMessage(event) {
     }
 }
 
-function showMessage(input, message, type) {
-    // get the small element and set the message
-    const msg = input.parentNode.querySelector("small");
-    msg.innerText = message;
-    // update the class for the input
-    input.className = type ? "success" : "error";
-    return type;
-}
-
-function showError(input, message) {
-    return showMessage(input, message, false);
-}
-
-function showSuccess(input) {
-    return showMessage(input, "", true);
-}
-
-function hasValue(input, message) {
-    if (input.value.trim() === "") {
-        return showError(input, message);
-    }
-    return showSuccess(input);
-}
-
-function validatePort(input, requiredMsg, invalidMsg) {
-    // check if the value is not empty
-    if (!hasValue(input, requiredMsg)) {
-        return false;
-    }
-
-    const port = input.value.trim();
-    if (isNaN(port) || port < 0) {
-        return showError(input, invalidMsg);
-    }
-    return true;
-}
-
-const VALUE_REQUIRED = "Please fill in the entry!"
-const PORT_INVALID = "Please provide a valid port!"
-var manual_mode, mqtt_enabled, ntp_fields, mqtt_fields;
-
 function getTimestamp() {
     document.getElementById("manual_mode").value = Math.floor(Date.now() / 1000);
 }
@@ -96,12 +56,19 @@ function processTimeFields() {
     else {
         ntp_fields.style.display = 'block';
         clearInterval(timer);
-        document.getElementById("manual_mode").value = "";
     }
+    document.getElementById("manual_mode_init").disabled = (manual_mode.checked) ? true : false;
+    var inputs = ntp_fields.querySelectorAll("input");
+    for (var i = 0; i < inputs.length; i++)
+        inputs[i].disabled = (manual_mode.checked) ? true : false;
 }
 
 function processMQTTFields() {
     mqtt_fields.style.display = (mqtt_enabled.checked) ? 'block' : 'none';
+    document.getElementById("mqtt_en_init").disabled = (mqtt_enabled.checked) ? true : false;
+    var inputs = mqtt_fields.querySelectorAll("input");
+    for (var i = 0; i < inputs.length; i++)
+        inputs[i].disabled = (mqtt_enabled.checked) ? false : true;
 }
 
 function onLoad(event) {
@@ -129,12 +96,7 @@ function onLoad(event) {
         // stop form submission
         event.preventDefault();
 
-        // validate the form
-        let serverValid = hasValue(time_form.elements['ntp_server'], VALUE_REQUIRED);
-
-        // if valid, submit the form.
-        if (serverValid)
-            time_form.submit();
+        time_form.submit();
     });
 
     /* Handling MQTT Form */
@@ -144,16 +106,7 @@ function onLoad(event) {
         // stop form submission
         event.preventDefault();
 
-        // validate the form
-        let hostValid = hasValue(mqtt_form.elements['mqtt_host'], VALUE_REQUIRED);
-        let portValid = validatePort(mqtt_form.elements['mqtt_port'], VALUE_REQUIRED, PORT_INVALID);
-        let clientValid = hasValue(mqtt_form.elements['mqtt_cli'], VALUE_REQUIRED);
-        let userValid = hasValue(mqtt_form.elements['mqtt_user'], VALUE_REQUIRED);
-
-        // if valid, submit the form.
-        if (hostValid && portValid && clientValid && userValid) {
-            mqtt_form.submit();
-        }
+        mqtt_form.submit();
     });
 
     /* Handling Wi-Fi Form */
@@ -163,13 +116,7 @@ function onLoad(event) {
         // stop form submission
         event.preventDefault();
 
-        // validate the form
-        let ssidValid = hasValue(wifi_form.elements['wifi_ssid'], VALUE_REQUIRED);
-
-        // if valid, submit the form.
-        if (ssidValid) {
-            wifi_form.submit();
-        }
+        wifi_form.submit();
     });
 }
 
