@@ -22,7 +22,7 @@ static uint8_t sb_maskBlink = 0;
  */
 static bool b_flag_Blink = 0;
 
-void DisplayInit()
+void Output_init()
 {
 	pinMode(EN_SOD_VFDOUT, OUTPUT);
 	pinMode(EN_SOD_VFCLK, OUTPUT);
@@ -40,6 +40,8 @@ void ClockPacked()
 {
 	static uint16_t MessageDisplay01SecTimeout_u16;
 	static uint16_t MessageDisplay01MinTimeout_u16;
+	static boolean wasValid_b;
+
 	switch (mainBuffer.esp_states.clockState)
 	{
 	case CLOCK_STATE_START: //    HELLO! message
@@ -63,7 +65,7 @@ void ClockPacked()
 			MessageDisplay01MinTimeout_u16 = 0;
 			MessageDisplay01SecTimeout_u16 = 0;
 		}
-		if (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT)
+		if (MessageDisplay01SecTimeout_u16 < 3 * MESSAGE_DISPLAY_01_SEC_TIMEOUT || !wasValid_b)
 		{
 			PackedDisplayData.hour_ten_digit_st_ui8 = digit_seg_ui8[25];	// n
 			PackedDisplayData.hour_unit_digit_st_ui8 = digit_seg_ui8[15];	// E
@@ -93,7 +95,7 @@ void ClockPacked()
 			MessageDisplay01MinTimeout_u16 = 0;
 			MessageDisplay01SecTimeout_u16 = 0;
 		}
-		if (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT)
+		if (MessageDisplay01SecTimeout_u16 < 3 * MESSAGE_DISPLAY_01_SEC_TIMEOUT || !wasValid_b)
 		{
 			PackedDisplayData.hour_ten_digit_st_ui8 = digit_seg_ui8[18];	// C
 			PackedDisplayData.hour_unit_digit_st_ui8 = digit_seg_ui8[26];	// o
@@ -117,6 +119,7 @@ void ClockPacked()
 	};
 	case CLOCK_STATE_VALID: // All is Ok.
 	{
+		wasValid_b = true;
 		PackedDisplayData.hour_ten_digit_st_ui8 = digit_seg_ui8[mainBuffer.hour_ten];
 		PackedDisplayData.hour_unit_digit_st_ui8 = digit_seg_ui8[mainBuffer.hour_unit];
 		PackedDisplayData.minute_ten_digit_st_ui8 = digit_seg_ui8[mainBuffer.minute_ten];
@@ -280,14 +283,7 @@ void Enable_Display()
 		lub_valuebrightness--;
 		lb_deltavalueLight--;
 	}
-	if (sb_maskBlink)
-	{
-		analogWrite(EN_SOD_VFBLANK, BRIGHTNESS_ZERO); /* Blinking and blink flag = 1*/
-	}
-	else
-	{
-		analogWrite(EN_SOD_VFBLANK, lub_valuebrightness);
-	}
+	analogWrite(EN_SOD_VFBLANK, (sb_maskBlink) ? BRIGHTNESS_ZERO : lub_valuebrightness);
 }
 
 #elif defined(PIXIE)
@@ -300,7 +296,7 @@ void TurnOffDisplay()
 	DisplayData.second_data = 0xFF;
 }
 
-void DisplayInit()
+void Output_init()
 {
 #if defined(FOUR_DIGITS)
 	pinMode(EN_COLON, OUTPUT);
@@ -328,6 +324,7 @@ void ClockPacked()
 {
 	static uint16_t MessageDisplay01SecTimeout_u16;
 	static uint16_t MessageDisplay15SecTimeout_u16;
+	static boolean wasValid_b;
 
 	if (mainBuffer.brightness == BRIGHTNESS_ZERO)
 	{
@@ -352,7 +349,7 @@ void ClockPacked()
 			MessageDisplay15SecTimeout_u16 = 0;
 			MessageDisplay01SecTimeout_u16 = 0;
 		}
-		if (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT)
+		if (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT || !wasValid_b)
 		{
 			TurnOffDisplay();
 			MessageDisplay01SecTimeout_u16++;
@@ -389,6 +386,7 @@ void ClockPacked()
 #endif
 	case CLOCK_STATE_VALID:
 	{
+		wasValid_b = true;
 #if defined(FOUR_DIGITS)
 		analogWrite(EN_COLON, (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT) << 4);
 		(++MessageDisplay01SecTimeout_u16) %= MESSAGE_DISPLAY_01_SEC_TIMEOUT * 2;

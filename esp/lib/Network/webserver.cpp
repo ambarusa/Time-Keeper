@@ -7,31 +7,25 @@
 
 #if defined(FLEURIE)
 const String light_form = R"=====(
-<p>
-	<input type="radio" name="light_mode" id="light_off">
-	<label for="light_off">OFF</label>
-</p>
-<p>
-	<input type="radio" name="light_mode" id="light_automatic">
-	<label for="light_auto">Automatic</label>
-</p>
-<p>
-	<input type="radio" name="light_mode" id="light_manual">
-	<label for="light_manual">Manual</label>
-	<br>
-	<input type="range" id="brightness" min="3" max="100" value="%BRIGHTNESS_PCT%">
-</p>)=====";
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="radio" name="light_mode" id="light_automatic">
+                <label class="form-check-label" for="light_auto">Automatic</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="light_mode" id="light_manual">
+                <label class="form-check-label" for="light_manual">Manual</label>
+            </div>
+            <div class="form-check">
+                <input type="range" class="form-range" id="brightness" min="3" max="100" step="1"
+                    value="%BRIGHTNESS_PCT%">
+            </div>)=====";
 
 #elif defined(PIXIE)
 const String light_form = R"=====(
-<p>
-	<input type="radio" name="light_mode" id="light_off">
-	<label for="light_off">OFF</label>
-</p>
-<p>
-	<input type="radio" name="light_mode" id="light_manual">
-	<label for="light_manual">ON</label>
-</p>)=====";
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="light_mode" id="light_manual">
+                <label class="form-check-label" for="light_manual">ON</label>
+            </div>)=====";
 #endif
 
 AsyncWebServer webserver(80);
@@ -39,7 +33,7 @@ AsyncWebSocket websocket("/ws");
 
 String processor(const String &var);
 
-void handleWebSocketMessage(void *arg, uint8 *data, size_t len)
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 {
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
@@ -70,7 +64,6 @@ void onSaveConfig(AsyncWebServerRequest *request)
     request->send(LittleFS, "/save_config.html", "text/html", false, processor);
 
     String form_type, name, value, ssid;
-    boolean restart_needed_b = false;
 
     form_type = request->getParam(0)->name();
 #ifdef DEBUG
@@ -95,7 +88,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
                 if (value.toInt())
                 {
                     Set_manual_mode(true);
-                    Set_timestamp(value.toInt());
+                    Set_timestamp(CLOCK_STATE_VALID, value.toInt());
                 }
                 else
                     Set_manual_mode(false);
@@ -103,7 +96,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
             if (name == "server")
             {
                 if (!Get_manual_mode())
-                    Set_ntp_server(value.c_str());
+                    Set_ntp_server(value);
             }
             if (name == "tz")
             {
@@ -130,19 +123,17 @@ void onSaveConfig(AsyncWebServerRequest *request)
                 Set_mqtt_password(value.c_str());
             if (name == "autodisc")
                 Set_mqtt_autodiscovery(value);
-            restart_needed_b = true;
+            Restart_device(true);
         }
         if (form_type == "Wi-Fi")
         {
             if (name == "ssid")
                 ssid = value;
             if (name == "pwd")
-                Set_wifi_credentials(ssid, value);
-            restart_needed_b = true;
+                Set_wifi_credentials(ssid.c_str(), value.c_str());
+            Restart_device(false);
         }
     }
-    if (restart_needed_b)
-        Restart_device();
 }
 
 void onResetConfig(AsyncWebServerRequest *request)
@@ -152,11 +143,11 @@ void onResetConfig(AsyncWebServerRequest *request)
     Memory_reset();
     Network_reset();
 
-    Restart_device();
+    Restart_device(false);
 }
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
-             void *arg, uint8 *data, size_t len)
+             void *arg, uint8_t *data, size_t len)
 {
     switch (type)
     {
@@ -254,8 +245,6 @@ String processor(const String &var)
         return String(DEVICE_NAME);
     else if (var == "LIGHT_FORM")
         return light_form;
-    else if (var == "TIME")
-        return Get_time_formatted();
     else if (var == "BRIGHTNESS_PCT")
         return String(Get_esp_states().lightBrightness);
     else if (var == "MANUAL_MODE")
@@ -282,5 +271,9 @@ String processor(const String &var)
         return Get_mqtt_username();
     else if (var == "MQTT_AUTODISC")
         return Get_mqtt_autodiscovery();
+    else if (var == "WIFI_STATUS")
+        return Get_wifi_status();
+    else if (var == "WIFI_SSID")
+        return Get_wifi_ssid();
     return "";
 }

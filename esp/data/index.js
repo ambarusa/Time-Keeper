@@ -33,9 +33,6 @@ function onMessage(event) {
     var first = event.data.split(" ")[0];
     var second = event.data.split(" ")[1];
     switch (first) {
-        case "TIME":
-            document.getElementById("time").innerHTML = second;
-            break;
         case "LIGHTMODE":
             id = "light_" + second;
             document.getElementById(id.toLowerCase()).checked = true;

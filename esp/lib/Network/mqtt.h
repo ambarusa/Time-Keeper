@@ -26,13 +26,13 @@ String Get_mqtt_username();
 String Get_mqtt_autodiscovery();
 
 void Set_mqtt_enabled(int enabled);
-void Set_mqtt_host(const char *host);
+void Set_mqtt_host(String host);
 void Set_mqtt_port(int port);
 void Set_mqtt_qossub(int sub);
 void Set_mqtt_qospub(int pub);
-void Set_mqtt_clientid(const char *clientid);
-void Set_mqtt_username(const char *user);
-void Set_mqtt_password(const char *pwd);
+void Set_mqtt_clientid(String clientid);
+void Set_mqtt_username(String user);
+void Set_mqtt_password(String pwd);
 void Set_mqtt_autodiscovery(String autodisc);
 
 void Mqtt_100ms_task();

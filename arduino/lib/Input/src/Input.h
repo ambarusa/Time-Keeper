@@ -3,8 +3,9 @@
 
 #include <Arduino.h>
 
-void LightSensorInit();
+void Input_init();
 
-void InputCyclic();
+void Input_20ms_task();
+void Input_1000ms_task();
 
 #endif /*INPUT_H_*/

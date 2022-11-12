@@ -17,8 +17,8 @@
 
 typedef enum
 {
-    LIGHT_MODE_AUTO,
     LIGHT_MODE_MANUAL,
+    LIGHT_MODE_AUTO,
     LIGHT_MODE_OFF
 } light_modes_t;
 
@@ -49,21 +49,9 @@ typedef union {
     clock_states_t clockState : 3;
     light_modes_t lightMode : 2;
     uint8_t dummy : 3;
-    uint8_t lightBrightness; /**<1 byte for the requested brightness value, requested by the user, in percent.*/
-    uint8_t checkSum;              /**<Variable for calculating a checksum for each package */
+    uint8_t lightBrightness;
   };
 } esp_states_t;
-
-/**
- * @brief Datatype used for reading from the serial port.
- *
- * Union of custom dataypes.
- */
-typedef struct
-{
-    timestamp_t timestamp;
-    esp_states_t esp_states;
-} serial_buffer_t;
 
 /**
  * @brief Datatype of the main global buffer.
@@ -94,7 +82,7 @@ typedef struct
     esp_states_t esp_states;
 } main_buffer_t;
 
-extern main_buffer_t mainBuffer; /**< Main global buffer. */
+extern volatile main_buffer_t mainBuffer; /**< Main global buffer. */
 
 #if defined(FLEURIE)
 /**

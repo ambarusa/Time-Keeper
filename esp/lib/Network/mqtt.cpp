@@ -5,7 +5,7 @@
 #include "memory.h"
 #include "hw.h"
 
-Ticker mqtt_reconn_ticker(Mqtt_connect, 5000);
+Ticker mqtt_reconn_ticker(Mqtt_connect, 5000, 3);
 
 boolean mqtt_enabled_u8;
 String mqtt_status = "Not enabled.";
@@ -17,8 +17,8 @@ char mqtt_clientid[EEPROM_MQTT_CLIENTID_SIZE];
 char mqtt_username[EEPROM_MQTT_USER_SIZE];
 char mqtt_password[EEPROM_MQTT_PWD_SIZE];
 uint16_t mqtt_port_u16;
-uint8 qossub;
-uint8 qospub;
+uint8_t qossub;
+uint8_t qospub;
 
 const char *mqtt_birth_payload = "online";
 const char *mqtt_will_payload = "offline";
@@ -88,9 +88,12 @@ void Set_mqtt_enabled(int enabled)
    mqtt_enabled_u8 = (boolean)enabled;
    Memory_write((char *)&mqtt_enabled_u8, EEPROM_MQTT_ENABLED_ADDR, sizeof(mqtt_enabled_u8));
 }
-void Set_mqtt_host(const char *host)
+void Set_mqtt_host(String host)
 {
-   strcpy(mqtt_host, host);
+   if (!strcmp(mqtt_host, host.c_str()))
+      return;
+
+   strcpy(mqtt_host, host.c_str());
    Memory_write(mqtt_host, EEPROM_MQTT_HOST_ADDR, EEPROM_MQTT_HOST_SIZE);
 }
 void Set_mqtt_port(int port)
@@ -108,19 +111,28 @@ void Set_mqtt_qospub(int pub)
    qospub = (uint8)pub;
    Memory_write((char *)&qospub, EEPROM_MQTT_QOSPUB_ADDR, sizeof(qospub));
 }
-void Set_mqtt_clientid(const char *clientid)
+void Set_mqtt_clientid(String clientid)
 {
-   strcpy(mqtt_clientid, clientid);
+   if (!strcmp(mqtt_clientid, clientid.c_str()))
+      return;
+
+   strcpy(mqtt_host, clientid.c_str());
    Memory_write((char *)mqtt_clientid, EEPROM_MQTT_CLIENTID_ADDR, EEPROM_MQTT_CLIENTID_SIZE);
 }
-void Set_mqtt_username(const char *user)
+void Set_mqtt_username(String user)
 {
-   strcpy(mqtt_username, user);
+   if (!strcmp(mqtt_username, user.c_str()))
+      return;
+
+   strcpy(mqtt_username, user.c_str());
    Memory_write((char *)mqtt_username, EEPROM_MQTT_USER_ADDR, EEPROM_MQTT_USER_SIZE);
 }
-void Set_mqtt_password(const char *pwd)
+void Set_mqtt_password(String pwd)
 {
-   strcpy(mqtt_password, pwd);
+   if (!strcmp(mqtt_password, pwd.c_str()))
+      return;
+
+   strcpy(mqtt_password, pwd.c_str());
    Memory_write((char *)mqtt_password, EEPROM_MQTT_PWD_ADDR, EEPROM_MQTT_PWD_SIZE);
 }
 void Set_mqtt_autodiscovery(String autodisc)
