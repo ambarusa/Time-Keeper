@@ -271,7 +271,7 @@ void Clock_task_1000ms()
         {
             if (ntp_client.isTimeSet())
             {
-                uint32_t timestamp_new_u32 = ntp_client.getEpochTime() + timezone_s8 * HOUR_IN_SEC;
+                uint32_t timestamp_new_u32 = ntp_client.getEpochTime();
                 if (abs(int(timestamp_new_u32 - timestamp_u32)) < HOUR_IN_SEC || esp_states_u24.clockState == CLOCK_STATE_SERVER_DOWN)
                     Set_timestamp(CLOCK_STATE_VALID, timestamp_new_u32);
                 sync_timeout_u16 = NTP_POLL_TIMEOUT;
