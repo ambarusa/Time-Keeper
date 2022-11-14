@@ -209,8 +209,11 @@ void Webserver_start()
     webserver.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request)
                  { request->send(LittleFS, "/settings.html", "text/html", false, processor); });
 
-    webserver.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
-                 { request->send(LittleFS, "/style.css", "text/css"); });
+    webserver.on("/bootstrap.min.css", HTTP_GET, [](AsyncWebServerRequest *request)
+                 { request->send(LittleFS, "/bootstrap.min.css", "text/css"); });
+
+    webserver.on("/bootstrap.min.js", HTTP_GET, [](AsyncWebServerRequest *request)
+                 { request->send(LittleFS, "/bootstrap.min.js", "text/javascript"); });
 
     webserver.on("/index.js", HTTP_GET, [](AsyncWebServerRequest *request)
                  { request->send(LittleFS, "/index.js", "text/javascript"); });

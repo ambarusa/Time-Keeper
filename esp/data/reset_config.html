@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Bootstrap CSS -->
-    <link href="style.css" rel="stylesheet">
+    <link href="bootstrap.min.css" rel="stylesheet">
 
     <title>%DEV_NAME% - Reset Configuration</title>
 </head>
@@ -15,17 +15,15 @@
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-3">
-        <div class="container-fluid">
+        <div class="container">
             <a class="navbar-brand" href="#">%DEV_NAME%</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <div class="collapse navbar-collapse" id="collapsibleNavbar">
                 <ul class="navbar-nav ms-3 mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" aria-current="page" href="/">Home</a>
+                        <a class="nav-link active" aria-current="page" href="/">Home</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/settings">Settings</a>
@@ -39,14 +37,16 @@
     </nav>
 
     <!-- Reset Config -->
-    <div class="card w-50 mx-auto">
+    <div class="card w-75 mx-auto">
         <h5 class="card-header">Reset Configuration</h5>
-        <h4 class="text-muted mx-auto mt-3">Connect to %DEV_NAME%'s AP, then go to 192.168.4.1</h4>
+        <h6 class="text-muted mx-auto mt-3 px-3">Connect to %DEV_NAME%'s AP, then go to 192.168.4.1</h6>
 
         <div class="btn-group mx-auto my-3">
             <button type="button" onclick="location.href='/'" class="btn btn-primary">Home</button>
         </div>
     </div>
+
+    <script src="bootstrap.min.js"></script>
 </body>
 
 </html>

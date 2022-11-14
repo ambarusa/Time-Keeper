@@ -123,6 +123,8 @@ void Set_lightMode(uint8_t value)
         Mqtt_state_publish(mqtt_effect_topic, Get_light_mode_str());
 #endif
     Notify_ws_clients("LIGHTMODE", Get_light_mode_str());
+    if (value != LIGHT_MODE_OFF)
+        Memory_write((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8));
 }
 void Set_lightBrightness(uint8_t value)
 {
@@ -139,7 +141,7 @@ void Set_lightBrightness(uint8_t value)
 #endif
     Notify_ws_clients("BRIGHTNESS", String(esp_states_u24.lightBrightness));
     if (esp_states_u24.clockState > CLOCK_STATE_IP)
-        Memory_write((char *)&value, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(uint8));
+        Memory_write((char *)&esp_states_u24.lightBrightness, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(uint8));
 }
 void Set_clock_state(uint8_t value)
 {
@@ -157,7 +159,7 @@ void Set_clock_state(uint8_t value)
         if (!manual_mode_b)
         {
             ntp_client.setPoolServerName(ntp_server);
-            ntp_client.setUpdateInterval(NTP_POLL_TIMEOUT);
+            ntp_client.setUpdateInterval(NTP_POLL_TIMEOUT - 5); /* Making sure that the update is earlier than the cyclic check. */
             ntp_client.begin();
 #ifdef DEBUG
             Serial.printf("Clock: Starting NTP Client\n");
@@ -173,6 +175,7 @@ void Set_clock_state(uint8_t value)
 }
 void Set_ntp_server(String server)
 {
+    force_sync_b = true;
     if (!strcmp(ntp_server, server.c_str()))
         return;
 
@@ -182,7 +185,6 @@ void Set_ntp_server(String server)
     ntp_client.setPoolServerName(ntp_server);
     if (!ntp_client.forceUpdate())
         ntp_client.begin();
-    force_sync_b = true;
 }
 void Set_timezone(int8 value)
 {
@@ -220,7 +222,8 @@ void Clock_init()
     if (!skip_ip_b)
     {
         timestamp_u32 = 0;
-        Set_lightBrightness(100);
+        esp_states_u24.lightBrightness = 100;
+        esp_states_u24.lightMode = LIGHT_MODE_MANUAL;
         esp_states_u24.clockState = CLOCK_STATE_START;
     }
 }
@@ -238,23 +241,22 @@ void Clock_task_1000ms()
             timestamp_u32 = Get_IPAddress_fragment();
         else if (!ip_state_timeout_u8)
         {
-            char brightness;
-            Memory_read(&brightness, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(brightness));
-            Set_lightBrightness(brightness);
+            Memory_read((char *)&esp_states_u24.lightBrightness, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(uint8_t));
+            Memory_read((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8_t));
 
-            if (!skip_ip_b)
-            {
-                Set_clock_state((manual_mode_b || ntp_client.isTimeSet()) ? CLOCK_STATE_VALID : CLOCK_STATE_SERVER_DOWN);
-                timestamp_u32 = timezone_s8 * HOUR_IN_SEC;
-                if (!manual_mode_b && ntp_client.isTimeSet())
-                    timestamp_u32 += ntp_client.getEpochTime();
-                else
-                    force_sync_b = true;
-            }
+            if (skip_ip_b)
+                Memory_read((char *)&timestamp_u32, EEPROM_TIMESTAMP_ADDR, EEPROM_TIMESTAMP_SIZE);
             else
             {
-                Memory_read((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8_t));
-                Memory_read((char *)&timestamp_u32, EEPROM_TIMESTAMP_ADDR, EEPROM_TIMESTAMP_SIZE);
+                if (manual_mode_b)
+                    Set_timestamp(CLOCK_STATE_VALID, 0);
+                else if (!manual_mode_b && ntp_client.isTimeSet())
+                    Set_timestamp(CLOCK_STATE_VALID, ntp_client.getEpochTime());
+                else
+                {
+                    Set_timestamp(CLOCK_STATE_SERVER_DOWN, 0);
+                    force_sync_b = true;
+                }
             }
 
             ip_state_timeout_u8 = TASK_06_SEC_TIMEOUT * 2 - 1;
@@ -269,10 +271,9 @@ void Clock_task_1000ms()
         {
             if (ntp_client.isTimeSet())
             {
-                Set_clock_state(CLOCK_STATE_VALID);
                 uint32_t timestamp_new_u32 = ntp_client.getEpochTime() + timezone_s8 * HOUR_IN_SEC;
-                if (abs(int(timestamp_new_u32 - timestamp_u32)) < HOUR_IN_SEC || force_sync_b)
-                    timestamp_u32 = timestamp_new_u32;
+                if (abs(int(timestamp_new_u32 - timestamp_u32)) < HOUR_IN_SEC || esp_states_u24.clockState == CLOCK_STATE_SERVER_DOWN)
+                    Set_timestamp(CLOCK_STATE_VALID, timestamp_new_u32);
                 sync_timeout_u16 = NTP_POLL_TIMEOUT;
                 force_sync_b = false;
             }
