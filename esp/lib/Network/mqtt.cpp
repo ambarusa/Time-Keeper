@@ -5,7 +5,8 @@
 #include "memory.h"
 #include "hw.h"
 
-Ticker mqtt_reconn_ticker(Mqtt_connect, 5000, 3);
+#define MQTT_RECONN_RETRIES   8
+Ticker mqtt_reconn_ticker(Mqtt_connect, 8000);
 
 boolean mqtt_enabled_u8;
 String mqtt_status = "Not enabled.";
@@ -143,7 +144,7 @@ void Set_mqtt_autodiscovery(String autodisc)
 void onMqttConnect(bool sessionPresent)
 {
    mqtt_reconn_ticker.stop();
-   mqtt_status = "Connected to MQTT.";
+   mqtt_status = "MQTT: Connected to MQTT.";
 
 #ifdef DEBUG
    Serial.printf("\nMQTT: Connected to %s:%i as %s\n", mqtt_host, mqtt_port_u16, mqtt_clientid);
@@ -197,7 +198,7 @@ void onMqttMessage(char *topic, char *payload_raw, AsyncMqttClientMessagePropert
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 {
 #ifdef DEBUG
-   Serial.print("Disconnected from MQTT, reason: ");
+   Serial.print("MQTT: Disconnected from MQTT, reason: ");
 #endif
    if (reason == AsyncMqttClientDisconnectReason::TLS_BAD_FINGERPRINT)
    {
@@ -237,7 +238,15 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 
    Notify_ws_clients("MQTT", Get_mqtt_status());
 
-   if (WiFi.isConnected() && mqtt_reconn_ticker.state() == STOPPED)
+   if (mqtt_reconn_ticker.counter() == MQTT_RECONN_RETRIES)
+   {
+      mqtt_reconn_ticker.stop();
+      mqtt_enabled_u8 = false;
+#ifdef DEBUG
+      Serial.println("MQTT: Couldn't connect. Disabling it until a new configuration");
+#endif
+   }
+   else if (WiFi.isConnected() && mqtt_reconn_ticker.state() == STOPPED)
       mqtt_reconn_ticker.start();
 }
 
@@ -291,20 +300,22 @@ void Mqtt_init()
 #endif
 
    amqtt_client.setWill(mqtt_availability_topic, 2, true, mqtt_will_payload, 0);
+   amqtt_client.setClientId(mqtt_clientid);
+   amqtt_client.setCredentials(mqtt_username, mqtt_password);
+   amqtt_client.setServer(mqtt_host, mqtt_port_u16);
+   amqtt_client.onConnect(onMqttConnect);
+   amqtt_client.onDisconnect(onMqttDisconnect);
+   amqtt_client.onMessage(onMqttMessage);
+
+#ifdef DEBUG
+   Serial.println("MQTT: Initialized topics");
+#endif
 }
 
 void Mqtt_connect()
 {
    if (!mqtt_enabled_u8)
       return;
-
-   amqtt_client.onConnect(onMqttConnect);
-   amqtt_client.onDisconnect(onMqttDisconnect);
-   amqtt_client.onMessage(onMqttMessage);
-
-   amqtt_client.setClientId(mqtt_clientid);
-   amqtt_client.setCredentials(mqtt_username, mqtt_password);
-   amqtt_client.setServer(mqtt_host, mqtt_port_u16);
 
    amqtt_client.connect();
 }

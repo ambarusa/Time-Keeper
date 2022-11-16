@@ -123,7 +123,8 @@ void onSaveConfig(AsyncWebServerRequest *request)
                 Set_mqtt_password(value.c_str());
             if (name == "autodisc")
                 Set_mqtt_autodiscovery(value);
-            Restart_device(true);
+            if (i == (uint8_t)request->params() - 1)
+                Restart_device(true);
         }
         if (form_type == "Wi-Fi")
         {
@@ -131,7 +132,8 @@ void onSaveConfig(AsyncWebServerRequest *request)
                 ssid = value;
             if (name == "pwd")
                 Set_wifi_credentials(ssid.c_str(), value.c_str());
-            Restart_device(false);
+            if (i == (uint8_t)request->params() - 1)
+                Restart_device(false);
         }
     }
 }
@@ -222,6 +224,8 @@ void Webserver_start()
                  { request->send(LittleFS, "/settings.js", "text/javascript"); });
 
     webserver.on("/save_config", HTTP_POST, onSaveConfig);
+
+    webserver.on("/save_config", HTTP_GET, onSaveConfig);
 
     webserver.on("/reset_config", HTTP_GET, onResetConfig);
 

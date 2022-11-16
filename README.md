@@ -32,3 +32,17 @@ You can flash your device with OTA, if the current firmware running supports it 
 
 4. Go back to the main Upload tab (right side of the screenshot above), choose the binary you want to flash, choose the device you added previously, and finally choose what type of binary you want to flash ([`firmware.bin`] = Program, [`littlefs.bin`] = SPIFFS).
 5. Hit Upload, and wait!
+
+# Configuring
+
+After plugging in the clock, it will try to connect to a previously stored Wi-Fi network, otherwise it will create an Access Point.
+
+
+## Configuring without web UI:
+* Passing Wi-Fi credentials to the device:\
+`http://IP_ADDRESS/save_config?Wi-Fi=&ssid=SSID&pwd=Password`\
+Change the values of `IP_ADDRESS` to the device's IP address, `ssid=` and `pwd=` to your network's credentials. If the device hasn't been connected to any network yet, then connect to the created Access Point, and change the `IP_ADDRESS` to `192.1168.4.1`.
+
+* Setting the clock to synchronize with an NTP server:\
+`http://IP_ADDRESS/save_config?TIME=&manual=0&tz=1&server=0.europe.pool.ntp.org`\
+Change the values of `IP_ADDRESS` to the device's IP address, `tz=` to your timezone, and `server=` to another NTP server, if you prefer another one.

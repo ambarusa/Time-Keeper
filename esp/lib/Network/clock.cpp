@@ -148,13 +148,17 @@ void Set_clock_state(uint8_t value)
     if (esp_states_u24.clockState == (clock_states_t)value)
         return;
 
+    if (skip_ip_b && (clock_states_t)value == CLOCK_STATE_IP)
+    {
+        skip_ip_b = false;
+        return;
+    }
     esp_states_u24.clockState = (clock_states_t)value;
 #ifdef DEBUG
     Serial.printf("Clock: Clock State was set to %s\n", Get_clock_state_str().c_str());
 #endif
-    switch (esp_states_u24.clockState)
+    if (esp_states_u24.clockState == CLOCK_STATE_IP)
     {
-    case CLOCK_STATE_IP:
         timestamp_u32 = Get_IPAddress_fragment();
         if (!manual_mode_b)
         {
@@ -165,9 +169,6 @@ void Set_clock_state(uint8_t value)
             Serial.printf("Clock: Starting NTP Client\n");
 #endif
         }
-        break;
-    default:
-        break;
     }
 
     if (esp_states_u24.clockState > CLOCK_STATE_IP)
@@ -237,9 +238,7 @@ void Clock_task_1000ms()
         break;
     case CLOCK_STATE_IP:
         static uint8_t ip_state_timeout_u8 = (!skip_ip_b) ? TASK_06_SEC_TIMEOUT * 2 - 1 : 0;
-        if (ip_state_timeout_u8 == TASK_06_SEC_TIMEOUT)
-            timestamp_u32 = Get_IPAddress_fragment();
-        else if (!ip_state_timeout_u8)
+        if (!ip_state_timeout_u8)
         {
             Memory_read((char *)&esp_states_u24.lightBrightness, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(uint8_t));
             Memory_read((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8_t));
@@ -261,6 +260,8 @@ void Clock_task_1000ms()
 
             ip_state_timeout_u8 = TASK_06_SEC_TIMEOUT * 2 - 1;
         }
+        else if (!(ip_state_timeout_u8 % TASK_06_SEC_TIMEOUT))
+            timestamp_u32 = Get_IPAddress_fragment();
         ip_state_timeout_u8--;
         break;
     case CLOCK_STATE_SERVER_DOWN:
