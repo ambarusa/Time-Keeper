@@ -5,8 +5,8 @@
 #include "memory.h"
 #include "hw.h"
 
-#define MQTT_RECONN_RETRIES   8
-Ticker mqtt_reconn_ticker(Mqtt_connect, 8000);
+#define MQTT_RECONN_RETRIES   5
+Ticker mqtt_reconn_ticker(Mqtt_connect, 10000);
 
 boolean mqtt_enabled_u8;
 String mqtt_status = "Not enabled.";
@@ -235,19 +235,19 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 #ifdef DEBUG
    Serial.println(mqtt_status);
 #endif
-
-   Notify_ws_clients("MQTT", Get_mqtt_status());
-
    if (mqtt_reconn_ticker.counter() == MQTT_RECONN_RETRIES)
    {
       mqtt_reconn_ticker.stop();
       mqtt_enabled_u8 = false;
+      mqtt_status = "Couldn't connect. Turned off until a new configuration";
 #ifdef DEBUG
       Serial.println("MQTT: Couldn't connect. Disabling it until a new configuration");
 #endif
    }
    else if (WiFi.isConnected() && mqtt_reconn_ticker.state() == STOPPED)
       mqtt_reconn_ticker.start();
+
+   Notify_ws_clients("MQTT", Get_mqtt_status());
 }
 
 void Mqtt_init()
