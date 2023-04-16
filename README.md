@@ -14,7 +14,7 @@
 
 ## ESP8266
 ## Serial
-Download the latest [`combined.bin`](https://github.com/ambarusa/Time-Keeper/tree/master/build) file  from one of the `build/esp_xxx` directories (depending on your clock type). Then choose a UI, to flash the device, for example:
+Download the latest [`firmware.bin`](https://github.com/ambarusa/Time-Keeper/tree/master/build) file  from one of the `build/esp_xxx` directories (depending on your clock type). Then choose a UI, to flash the device, for example:
 
 - Tasmotizer ([Releases](https://github.com/tasmota/tasmotizer/releases))
 - NodeMCU PyFlasher ([Releases](https://github.com/marcelstoer/nodemcu-pyflasher/releases))
@@ -25,13 +25,13 @@ You can flash your device with OTA, if the current firmware running supports it 
 ![](./docs/screenshots/ota_ui.png)
 
 1. Download this UI: [ESP-Ota-UI](https://github.com/Nikfinn99/ESP-Ota-UI/releases). You will need to run the application twice, once for the firmware and once for the filesystem.
-2. With OTA, you can't flash `combined.bin`, because it's too large. Use the latest precompiled [`firmware.bin`](https://github.com/ambarusa/Time-Keeper/tree/master/build) and [`littlefs.bin`](https://github.com/ambarusa/Time-Keeper/tree/master/build) files instead, from the directory matching your clock type.
+2. Download the latest precompiled [`firmware.bin`](https://github.com/ambarusa/Time-Keeper/tree/master/build) file from one of the `build/esp_xxx` directories (depending on your clock type).
 3. Open the Ota UI, go to Devices tab, and add your device by typing a name, and it's IP Address (see left side of the screenshot above).
 
 **PLEASE BE CAREFUL AT THE FOLLOWING STEP**
 
-4. Go back to the main Upload tab (right side of the screenshot above), choose the binary you want to flash, choose the device you added previously, and finally choose what type of binary you want to flash ([`firmware.bin`] = Program, [`littlefs.bin`] = SPIFFS).
-5. Hit Upload, and wait!
+1. Go back to the main Upload tab (right side of the screenshot above), choose the binary you want to flash, choose the device you added previously, and finally choose what type of binary you want to flash ([`firmware.bin`] = Program).
+2. Hit Upload, and wait!
 
 # Configuring
 
@@ -41,7 +41,7 @@ After plugging in the clock, it will try to connect to a previously stored Wi-Fi
 ## Configuring without web UI:
 * Passing Wi-Fi credentials to the device:\
 `http://IP_ADDRESS/save_config?Wi-Fi=&ssid=SSID&pwd=Password`\
-Change the values of `IP_ADDRESS` to the device's IP address, `ssid=` and `pwd=` to your network's credentials. If the device hasn't been connected to any network yet, then connect to the created Access Point, and change the `IP_ADDRESS` to `192.1168.4.1`.
+Change the values of `IP_ADDRESS` to the device's IP address, `ssid=` and `pwd=` to your network's credentials. If the device hasn't been connected to any network yet, then connect to the created Access Point, and change the `IP_ADDRESS` to `pixie.local` or `4.3.2.1`.
 
 * Setting the clock to synchronize with an NTP server:\
 `http://IP_ADDRESS/save_config?TIME=&manual=0&tz=1&server=0.europe.pool.ntp.org`\

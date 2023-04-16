@@ -21,7 +21,7 @@ IPAddress netMsk(255, 255, 255, 0);
 void Network_create_AP();
 void Network_start_MDNS();
 
-Ticker create_ap_ticker(Network_create_AP, 6000, 1);
+Ticker create_ap_ticker(Network_create_AP, 10000, 1);
 
 void OTA_init()
 {
@@ -183,7 +183,6 @@ void Disable_WifiDisconnectHandler()
 void Network_100ms_task()
 {
    create_ap_ticker.update();
-
    if (WiFi.status() != WL_CONNECTED && WiFi.getMode() != WIFI_AP_STA && create_ap_ticker.state() != RUNNING)
       create_ap_ticker.start();
    else if (WiFi.getMode() == WIFI_AP_STA)
