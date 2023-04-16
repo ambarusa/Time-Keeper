@@ -5,11 +5,11 @@
 #include "memory.h"
 #include "hw.h"
 
-#define MQTT_RECONN_RETRIES   5
+#define MQTT_RECONN_RETRIES 5
 Ticker mqtt_reconn_ticker(Mqtt_connect, 10000);
 
 boolean mqtt_enabled_u8;
-String mqtt_status = "Not enabled.";
+String mqtt_status = "Not enabled";
 
 AsyncMqttClient amqtt_client;
 
@@ -104,12 +104,12 @@ void Set_mqtt_port(int port)
 }
 void Set_mqtt_qossub(int sub)
 {
-   qossub = (uint8)sub;
+   qossub = (uint8_t)sub;
    Memory_write((char *)&qossub, EEPROM_MQTT_QOSSUB_ADDR, sizeof(qossub));
 }
 void Set_mqtt_qospub(int pub)
 {
-   qospub = (uint8)pub;
+   qospub = (uint8_t)pub;
    Memory_write((char *)&qospub, EEPROM_MQTT_QOSPUB_ADDR, sizeof(qospub));
 }
 void Set_mqtt_clientid(String clientid)
@@ -146,9 +146,7 @@ void onMqttConnect(bool sessionPresent)
    mqtt_reconn_ticker.stop();
    mqtt_status = "MQTT: Connected to MQTT.";
 
-#ifdef DEBUG
-   Serial.printf("\nMQTT: Connected to %s:%i as %s\n", mqtt_host, mqtt_port_u16, mqtt_clientid);
-#endif
+   DEBUG_PRINTF("\nMQTT: Connected to %s:%i as %s\n", mqtt_host, mqtt_port_u16, mqtt_clientid);
    Notify_ws_clients("MQTT", Get_mqtt_status());
 
    amqtt_client.subscribe(mqtt_cmd_topic, qossub);
@@ -168,9 +166,7 @@ void onMqttConnect(bool sessionPresent)
 void onMqttMessage(char *topic, char *payload_raw, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
 {
    String payload = ((String)payload_raw).substring(0, len);
-#ifdef DEBUG
-   Serial.printf("\nMQTT: Recieved [%s]: %s\n", topic, payload.c_str());
-#endif
+   DEBUG_PRINTF("\nMQTT: Recieved [%s]: %s\n", topic, payload.c_str());
 
    if (!strcmp(topic, mqtt_cmd_topic))
    {
@@ -197,9 +193,7 @@ void onMqttMessage(char *topic, char *payload_raw, AsyncMqttClientMessagePropert
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 {
-#ifdef DEBUG
-   Serial.print("MQTT: Disconnected from MQTT, reason: ");
-#endif
+   DEBUG_PRINTLN("MQTT: Disconnected from MQTT, reason: ");
    if (reason == AsyncMqttClientDisconnectReason::TLS_BAD_FINGERPRINT)
    {
       mqtt_status = "Bad server fingerprint.";
@@ -232,17 +226,13 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
    {
       mqtt_status = "Not enough space on ESP.";
    }
-#ifdef DEBUG
-   Serial.println(mqtt_status);
-#endif
+   DEBUG_PRINTLN(mqtt_status);
    if (mqtt_reconn_ticker.counter() == MQTT_RECONN_RETRIES)
    {
       mqtt_reconn_ticker.stop();
       mqtt_enabled_u8 = false;
       mqtt_status = "Couldn't connect. Turned off until a new configuration";
-#ifdef DEBUG
-      Serial.println("MQTT: Couldn't connect. Disabling it until a new configuration");
-#endif
+      DEBUG_PRINTLN("MQTT: Couldn't connect. Disabling it until a new configuration");
    }
    else if (WiFi.isConnected() && mqtt_reconn_ticker.state() == STOPPED)
       mqtt_reconn_ticker.start();
@@ -262,7 +252,10 @@ void Mqtt_init()
    Memory_read((char *)&qospub, EEPROM_MQTT_QOSPUB_ADDR, sizeof(qospub));
 
    if (!mqtt_enabled_u8)
+   {
+      Serial.println("Network: MQTT not enabled.");
       return;
+   }
 
    String buffer;
    buffer = String(mqtt_clientid) + availability;
@@ -307,9 +300,7 @@ void Mqtt_init()
    amqtt_client.onDisconnect(onMqttDisconnect);
    amqtt_client.onMessage(onMqttMessage);
 
-#ifdef DEBUG
-   Serial.println("MQTT: Initialized topics");
-#endif
+   DEBUG_PRINTLN("MQTT: Initialized topics");
 }
 
 void Mqtt_connect()
@@ -356,9 +347,7 @@ void Mqtt_discovery_publish()
    char payload[1024];
    serializeJsonPretty(root, payload);
    uint16_t id = amqtt_client.publish(mqtt_config_topic, qospub, true, payload);
-#ifdef DEBUG
-   Serial.printf("MQTT Disovery Send [ID %i]: [%s]: \n%s\n", id, mqtt_config_topic, payload);
-#endif
+   DEBUG_PRINTF("MQTT Disovery Send [ID %i]: [%s]: \n%s\n", id, mqtt_config_topic, payload);
 }
 
 void Mqtt_state_publish(char *topic, String data)
@@ -367,9 +356,7 @@ void Mqtt_state_publish(char *topic, String data)
       return;
 
    uint16_t id = amqtt_client.publish(topic, qospub, true, data.c_str());
-#ifdef DEBUG
-   Serial.printf("MQTT State Send [ID %i]: [%s]: %s\n", id, topic, data.c_str());
-#endif
+   DEBUG_PRINTF("MQTT State Send [ID %i]: [%s]: %s\n", id, topic, data.c_str());
 }
 
 void Mqtt_100ms_task()

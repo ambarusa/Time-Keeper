@@ -4,6 +4,14 @@
 #include <ESP8266WiFi.h>
 #include <String.h>
 
+#ifdef DEBUG
+  #define DEBUG_PRINTLN(x) Serial.println(x)
+  #define DEBUG_PRINTF(...) Serial.printf(__VA_ARGS__);
+#else
+  #define DEBUG_PRINTLN(x)
+  #define DEBUG_PRINTF(...)
+#endif
+
 void Hardware_init();
 void Hardware_20ms_task();
 void Hardware_1000ms_task();

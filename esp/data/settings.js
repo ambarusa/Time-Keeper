@@ -1,8 +1,25 @@
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
 
-var timer, timestamp;
-var manual_mode, mqtt_enabled, ntp_fields, mqtt_fields;
+var timer;
+var mqtt_enabled, mqtt_fields;
+
+function setActiveNavLink() {
+    var currentUrl = window.location.pathname;
+    var links = document.querySelectorAll('nav a');
+    for (var i = 0; i < links.length; i++) {
+        if (links[i].classList.contains('navbar-brand'))
+            continue;
+        var linkUrl = links[i].pathname;
+        if (linkUrl === '/' && currentUrl === '/') {
+            links[i].classList.add('active');
+            break;
+        } else if (linkUrl !== '/' && currentUrl.startsWith(linkUrl)) {
+            links[i].classList.add('active');
+            break;
+        }
+    }
+}
 
 function initWebSocket() {
     websocket = new WebSocket(gateway);
@@ -33,34 +50,27 @@ function onClose(event) {
 
 function onMessage(event) {
     console.log("WS Message received: " + event.data);
-    var first = event.data.split(" ")[0];
-    var second = event.data.split(" ")[1];
-    switch (first) {
-        case "MQTT":
-            var text = event.data.slice(event.data.indexOf(" ") + 1);
-            document.getElementById('mqtt_status').innerHTML = text;
-            break;
-    }
-}
 
-function getTimestamp() {
-    document.getElementById("manual_mode").value = Math.floor(Date.now() / 1000);
-}
+    try {
+        // parse the JSON data from the message
+        const data = JSON.parse(event.data);
 
-function processTimeFields() {
-    if (manual_mode.checked) {
-        ntp_fields.style.display = 'none';
-        getTimestamp();
-        timer = setInterval(getTimestamp, 1000);
+        document.getElementById('wifi_status').innerHTML = data.wifi_status;
+        document.getElementById('wifi_ssid').value = data.wifi_ssid;
+        document.getElementById('mqtt_status').innerHTML = data.mqtt_status;
+        document.getElementById('mqtt_en').checked = data.mqtt_en === 'true';
+        processMQTTFields();
+        document.getElementById('mqtt_host').value = data.mqtt_host;
+        document.getElementById('mqtt_port').value = data.mqtt_port;
+        document.getElementById('mqtt_qossub').value = data.mqtt_qossub;
+        document.getElementById('mqtt_qospub').value = data.mqtt_qospub;
+        document.getElementById('mqtt_cli').value = data.mqtt_cli;
+        document.getElementById('mqtt_user').value = data.mqtt_user;
+        document.getElementById('mqtt_pwd').value = data.mqtt_pwd;
+        document.getElementById('mqtt_autodisc').value = data.mqtt_autodisc;
+    } catch (error) {
+        console.error(error);
     }
-    else {
-        ntp_fields.style.display = 'block';
-        clearInterval(timer);
-    }
-    document.getElementById("manual_mode_init").disabled = (manual_mode.checked) ? true : false;
-    var inputs = ntp_fields.querySelectorAll("input");
-    for (var i = 0; i < inputs.length; i++)
-        inputs[i].disabled = (manual_mode.checked) ? true : false;
 }
 
 function processMQTTFields() {
@@ -71,33 +81,24 @@ function processMQTTFields() {
         inputs[i].disabled = (mqtt_enabled.checked) ? false : true;
 }
 
-function onLoad(event) {
-    manual_mode = document.getElementById('manual_mode');
+// this will disable the leave page warning pop-up of the forms
+function onUnload(event) {
+    event.preventDefault();
+    event.returnValue = null;
+}
+
+window.addEventListener('unload', onUnload);
+
+function onLoad() {
     mqtt_enabled = document.getElementById('mqtt_en');
-    ntp_fields = document.getElementById('ntp_fields');
     mqtt_fields = document.getElementById('mqtt_fields');
 
+    setActiveNavLink();
     initWebSocket();
     initSwitch();
 
-    processTimeFields();
-    processMQTTFields();
-
-    /* Handling Manual Mode Checkbox */
-    manual_mode.addEventListener('change', processTimeFields);
-
     /* Handling MQTT Enabled Checkbox */
     mqtt_enabled.addEventListener('change', processMQTTFields);
-
-    /* Handling TIME Form */
-    const time_form = document.getElementById('time_form');
-    time_form.addEventListener('submit', (event) => {
-
-        // stop form submission
-        event.preventDefault();
-
-        time_form.submit();
-    });
 
     /* Handling MQTT Form */
     const mqtt_form = document.getElementById('mqtt_form');

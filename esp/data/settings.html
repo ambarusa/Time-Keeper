@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -13,189 +13,19 @@
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-3">
-        <div class="container">
-            <a class="navbar-brand" href="#">%DEV_NAME%</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="collapsibleNavbar">
-                <ul class="navbar-nav ms-3 mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/settings">Settings</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#about">About</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Time -->
-    <div class="card w-75 mx-auto mb-5">
-        <h5 class="card-header">Time Configuration</h5>
-        <form class="card-body was-validated" action="/save_config" method="post" id="time_form">
-            <input type="hidden" name="TIME">
-
-            <div class="form-group row mb-3">
-                <label class="col-md-2 col-form-label" for="ntp_tz">Timezone</label>
-                <div class="col-md-6">
-                    <select class="form-select" id="ntp_tz" name="tz">
-                        <option value="none" selected disabled hidden>%NTP_TZ%</option>
-                        <option value="-12">(GMT -12:00) Eniwetok, Kwajalein</option>
-                        <option value="-11">(GMT -11:00) Midway Island, Samoa</option>
-                        <option value="-10">(GMT -10:00) Hawaii</option>
-                        <option value="-9">(GMT -9:00) Alaska</option>
-                        <option value="-8">(GMT -8:00) Pacific Time (US &amp; Canada)</option>
-                        <option value="-7">(GMT -7:00) Mountain Time (US &amp; Canada)</option>
-                        <option value="-6">(GMT -6:00) Central Time (US &amp; Canada), Mexico City</option>
-                        <option value="-5">(GMT -5:00) Eastern Time (US &amp; Canada), Bogota, Lima</option>
-                        <option value="-4">(GMT -4:00) Atlantic Time (Canada), Caracas, La Paz</option>
-                        <option value="-3">(GMT -3:00) Brazil, Buenos Aires, Georgetown</option>
-                        <option value="-2">(GMT -2:00) Mid-Atlantic</option>
-                        <option value="-1">(GMT -1:00) Azores, Cape Verde Islands</option>
-                        <option value="0">(GMT) Western Europe Time, London, Lisbon, Casablanca</option>
-                        <option value="1">(GMT +1:00) Brussels, Copenhagen, Madrid, Paris</option>
-                        <option value="2">(GMT +2:00) Kaliningrad, South Africa</option>
-                        <option value="3">(GMT +3:00) Baghdad, Riyadh, Moscow, St. Petersburg</option>
-                        <option value="4">(GMT +4:00) Abu Dhabi, Muscat, Baku, Tbilisi</option>
-                        <option value="5">(GMT +5:00) Ekaterinburg, Islamabad, Karachi, Tashkent</option>
-                        <option value="6">(GMT +6:00) Almaty, Dhaka, Colombo</option>
-                        <option value="7">(GMT +7:00) Bangkok, Hanoi, Jakarta</option>
-                        <option value="8">(GMT +8:00) Beijing, Perth, Singapore, Hong Kong</option>
-                        <option value="9">(GMT +9:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk</option>
-                        <option value="10">(GMT +10:00) Eastern Australia, Guam, Vladivostok</option>
-                        <option value="11">(GMT +11:00) Magadan, Solomon Islands, New Caledonia</option>
-                        <option value="12">(GMT +12:00) Auckland, Wellington, Fiji, Kamchatka</option>
-                        <option value="13">(GMT +13:00) Apia, Nukualofa</option>
-                        <option value="14">(GMT +14:00) Line Islands, Tokelau</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group row mb-3">
-                <label class="col-md-2 col-form-label" for="manual_mode">Manual Mode</label>
-                <div class="col-md mt-2">
-                    <input type="hidden" value="0" id="manual_mode_init" name="manual">
-                    <input type="checkbox" class="form-check-input" id="manual_mode" name="manual" %MANUAL_MODE%>
-                    <small class="text-muted ms-3">
-                        With this option enabled it will sync the time from this device.
-                    </small>
-                </div>
-            </div>
-
-            <div id="ntp_fields">
-                <div class="form-group row mb-3">
-                    <label class="col-md-2 col-form-label" for="ntp_server">NTP Server</label>
-                    <input type="text" class="form-control col-md me-3" id="ntp_server" name="server"
-                        value="%NTP_SERVER%" placeholder="NTP Server Address" required>
-                </div>
-            </div>
-
-            <div class="d-grid col-6 mx-auto">
-                <button type="submit" class="btn btn-primary btn-lg">Submit</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- MQTT -->
-    <div class="card w-75 mx-auto mb-5">
-        <h5 class="card-header">MQTT Configuration</h5>
-        <h4 class="text-muted mx-auto mt-3"><span id="mqtt_status">%MQTT_STATUS%</span></h4>
-        <form class="card-body was-validated" action="/save_config" method="post" id="mqtt_form">
-            <input type="hidden" name="MQTT">
-
-            <div class="form-group row mb-3">
-                <input type="hidden" name="enabled" id="mqtt_en_init" value="0">
-                <label class="col-md-2 col-form-label" for="mqtt_en">MQTT Enabled</label>
-                <div class="col-sm mt-2">
-                    <input type="checkbox" class="form-check-input" id="mqtt_en" name="enabled" value="1" %MQTT_EN%>
-                </div>
-            </div>
-
-            <div id="mqtt_fields">
-                <div class="input-group mb-3">
-                    <label class="col-md-2 col-form-label" for="mqtt_host">MQTT Host</label>
-                    <span class="input-group-text">mqtt://</span>
-                    <input type="text" class="form-control" id="mqtt_host" name="host" value="%MQTT_HOST%"
-                        placeholder="MQTT Host Address" required>
-                    <span class="input-group-text">:(Port)</span>
-                    <input type="number" class="form-control" type="number" id="mqtt_port" name="port"
-                        value="%MQTT_PORT%" placeholder="Port" required>
-                </div>
-
-                <div class="form-group row mb-3">
-                    <label class="col-md-2 col-form-label" for="qossub">Subscribe QoS</label>
-                    <div class="col-sm-3">
-                        <select class="form-select" id="qossub" name="qossub" form="mqtt_form">
-                            <option value="none" selected disabled hidden>%MQTT_QOSSUB%</option>
-                            <option value="0">0</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group row mb-3">
-                    <label class="col-md-2 col-form-label" for="qospub">Publish QoS</label>
-                    <div class="col-sm-3">
-                        <select class="form-select" id="qospub" name="qospub" form="mqtt_form">
-                            <option value="none" selected disabled hidden>%MQTT_QOSPUB%</option>
-                            <option value="0">0</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group row mb-3">
-                    <label class="col-md-2 col-form-label" for="mqtt_cli">Client ID</label>
-                    <input type="text" class="form-control col-md me-3" id="mqtt_cli" name="clientid" value="%MQTT_CLI%"
-                        placeholder="MQTT Client ID" required>
-                </div>
-
-                <div class="form-group row mb-3">
-                    <label class="col-md-2 col-form-label" for="mqtt_user">Username</label>
-                    <input type="text" class="form-control col-md me-3" id="mqtt_user" name="user" value="%MQTT_USER%"
-                        placeholder="MQTT Username" required>
-                </div>
-
-                <div class="form-group row mb-3">
-                    <label class="col-md-2 col-form-label" for="mqtt_pwd">Password</label>
-                    <input type="password" class="form-control col-md me-3" id="mqtt_pwd" name="pwd"
-                        placeholder="Leave empty if no password is required">
-                </div>
-
-                <div class="form-group row mb-3">
-                    <label class="col-md-2 col-form-label" for="mqtt_autodisc">Autodiscovery topic</label>
-                    <input type="text" class="form-control col-md me-3" id="mqtt_autodisc" name="autodisc"
-                        value="%MQTT_AUTODISC%" placeholder="Leave empty for no autodiscovery">
-                </div>
-            </div>
-
-            <div class="d-grid col-6 mx-auto">
-                <button type="submit" class="btn btn-primary btn-lg">Submit</button>
-            </div>
-        </form>
-    </div>
-
+    %NAVBAR%
 
     <!-- Wi-Fi -->
-    <div class="card w-75 mx-auto mb-5">
+    <div class="card w-50 mx-auto mb-5">
         <h5 class="card-header">Wi-Fi Configuration</h5>
-        <h4 class="text-muted mx-auto mt-3"><span id="wifi_status">%WIFI_STATUS%</span></h4>
+        <h4 class="text-muted mx-auto mt-3"><span id="wifi_status"></span></h4>
         <form class="card-body was-validated" action="/save_config" method="post" id="wifi_form">
             <input type="hidden" name="Wi-Fi">
 
             <div class="form-group row mb-3">
                 <label class="col-md-2 col-form-label" for="wifi_ssid">SSID</label>
-                <input type="text" class="form-control col-md me-3" id="wifi_ssid" name="ssid" value="%WIFI_SSID%"
-                    placeholder="Wi-Fi SSID" required>
+                <input type="text" class="form-control col-md me-3" id="wifi_ssid" name="ssid" placeholder="Wi-Fi SSID"
+                    required>
             </div>
 
             <div class="form-group row mb-3">
@@ -210,8 +40,87 @@
         </form>
     </div>
 
+    <!-- MQTT -->
+    <div class="card w-50 mx-auto mb-5">
+        <h5 class="card-header">MQTT Configuration</h5>
+        <h4 class="text-muted mx-auto mt-3"><span id="mqtt_status"></span></h4>
+        <form class="card-body was-validated" action="/save_config" method="post" id="mqtt_form">
+            <input type="hidden" name="MQTT">
+
+            <div class="form-group row mb-3">
+                <input type="hidden" name="enabled" id="mqtt_en_init" value="0">
+                <label class="col-md-2 col-form-label" for="mqtt_en">MQTT Enabled</label>
+                <div class="col-sm mt-2">
+                    <input type="checkbox" class="form-check-input" id="mqtt_en" name="enabled" value="1">
+                </div>
+            </div>
+
+            <div id="mqtt_fields">
+                <div class="input-group mb-3">
+                    <label class="col-md-2 col-form-label" for="mqtt_host">MQTT Host</label>
+                    <span class="input-group-text">mqtt://</span>
+                    <input type="text" class="form-control" id="mqtt_host" name="host" placeholder="MQTT Host Address"
+                        required>
+                    <span class="input-group-text">:(Port)</span>
+                    <input type="number" class="form-control" type="number" id="mqtt_port" name="port"
+                        placeholder="Port" required>
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label class="col-md-2 col-form-label" for="mqtt_qossub">Subscribe QoS</label>
+                    <div class="col-sm-3">
+                        <select class="form-select" id="mqtt_qossub" name="qossub" form="mqtt_form">
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label class="col-md-2 col-form-label" for="mqtt_qospub">Publish QoS</label>
+                    <div class="col-sm-3">
+                        <select class="form-select" id="mqtt_qospub" name="qospub" form="mqtt_form">
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label class="col-md-2 col-form-label" for="mqtt_cli">Client ID</label>
+                    <input type="text" class="form-control col-md me-3" id="mqtt_cli" name="clientid"
+                        placeholder="MQTT Client ID" required>
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label class="col-md-2 col-form-label" for="mqtt_user">Username</label>
+                    <input type="text" class="form-control col-md me-3" id="mqtt_user" name="user"
+                        placeholder="MQTT Username" required>
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label class="col-md-2 col-form-label" for="mqtt_pwd">Password</label>
+                    <input type="password" class="form-control col-md me-3" id="mqtt_pwd" name="pwd"
+                        placeholder="Leave empty if no password is required">
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label class="col-md-2 col-form-label" for="mqtt_autodisc">Autodiscovery topic</label>
+                    <input type="text" class="form-control col-md me-3" id="mqtt_autodisc"
+                        name="autodisc" placeholder="Leave empty for no autodiscovery">
+                </div>
+            </div>
+
+            <div class="d-grid col-6 mx-auto">
+                <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+            </div>
+        </form>
+    </div>
+
     <!-- Reset -->
-    <div class="card w-75 mx-auto mb-3">
+    <div class="card w-50 mx-auto mb-3">
         <h5 class="card-header">Reset the device</h5>
         <h6 class="text-muted mx-auto my-3 px-3">Reset all the personal settings</h6>
 

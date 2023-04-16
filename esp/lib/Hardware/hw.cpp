@@ -25,9 +25,7 @@ void Restart_device(boolean soft_b)
         Memory_write((char *)&restart_flg_u8, EEPROM_RESTART_FLG_ADDR, sizeof(restart_flg_u8));
     }
     Disable_WifiDisconnectHandler();
-#ifdef DEBUG
-    Serial.println("\nHardware: The device will now restart...\n");
-#endif
+    DEBUG_PRINTLN("\nHardware: The device will now restart...\n");
     device_restart_ticker.start();
 }
 
@@ -62,9 +60,7 @@ void Read_inputs()
         if (reset_button_u8 == state_current_b)
             return;
         reset_button_u8 = state_current_b;
-#ifdef DEBUG
-        Serial.printf("\nHardware: RESET Switch was turned %s\n", Get_reset_button_state_str().c_str());
-#endif
+        DEBUG_PRINTF("\nHardware: RESET Switch was turned %s\n", Get_reset_button_state_str().c_str());
     }
 }
 

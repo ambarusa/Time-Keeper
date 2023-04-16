@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include "NTPClient.h"
+#include "hw.h"
 #include "memory.h"
 #include "network.h"
 
@@ -21,9 +22,7 @@ esp_states_t esp_states_u24;
 void Clock_skip_ip()
 {
     skip_ip_b = true;
-#ifdef DEBUG
-    Serial.printf("Clock: IP displaying will be skipped\n");
-#endif
+    DEBUG_PRINTLN("Clock: IP displaying will be skipped\n");
 }
 
 uint32_t Get_IPAddress_fragment()
@@ -103,9 +102,7 @@ void Set_manual_mode(boolean value)
         return;
 
     manual_mode_b = value;
-#ifdef DEBUG
-    Serial.printf("Clock: Manual Mode was set to %s\n", (value == 1) ? "ON" : "OFF");
-#endif
+    DEBUG_PRINTF("Clock: Manual Mode was set to %s\n", (value == 1) ? "ON" : "OFF");
     Memory_write((char *)&value, EEPROM_MANUAL_MODE_ADDR, sizeof(value));
 }
 void Set_lightMode(uint8_t value)
@@ -114,9 +111,7 @@ void Set_lightMode(uint8_t value)
         return;
 
     esp_states_u24.lightMode = light_modes_t(value);
-#ifdef DEBUG
-    Serial.printf("Clock: Light Mode set to %s\n", Get_light_mode_str().c_str());
-#endif
+    DEBUG_PRINTF("Clock: Light Mode set to %s\n", Get_light_mode_str().c_str());
     Mqtt_state_publish(mqtt_topic, (value == LIGHT_MODE_OFF) ? "OFF" : "ON");
 #if defined(FLEURIE)
     if (value != LIGHT_MODE_OFF)
@@ -132,9 +127,7 @@ void Set_lightBrightness(uint8_t value)
         return;
 
     esp_states_u24.lightBrightness = value % 101;
-#ifdef DEBUG
-    Serial.printf("Clock: Brightness set to %i\n", value);
-#endif
+    DEBUG_PRINTF("Clock: Brightness set to %i\n", value);
 
 #if defined(FLEURIE)
     Mqtt_state_publish(mqtt_brightness_topic, String(value));
@@ -154,9 +147,7 @@ void Set_clock_state(uint8_t value)
         return;
     }
     esp_states_u24.clockState = (clock_states_t)value;
-#ifdef DEBUG
-    Serial.printf("Clock: Clock State was set to %s\n", Get_clock_state_str().c_str());
-#endif
+    DEBUG_PRINTF("Clock: Clock State was set to %s\n", Get_clock_state_str().c_str());
     if (esp_states_u24.clockState == CLOCK_STATE_IP)
     {
         timestamp_u32 = Get_IPAddress_fragment();
@@ -165,9 +156,7 @@ void Set_clock_state(uint8_t value)
             ntp_client.setPoolServerName(ntp_server);
             ntp_client.setUpdateInterval(NTP_POLL_TIMEOUT - 5); /* Making sure that the update is earlier than the cyclic check. */
             ntp_client.begin();
-#ifdef DEBUG
-            Serial.printf("Clock: Starting NTP Client\n");
-#endif
+            DEBUG_PRINTLN("Clock: Starting NTP Client\n");
         }
     }
 

@@ -1,8 +1,9 @@
 #include <ArduinoOTA.h>
 #include <LittleFS.h>
-#include <ESP8266mDNS.h>
 #include <String.h>
+#include <ESP8266mDNS.h>
 #include <user_interface.h>
+#include <DNSServer.h>
 #include "Ticker.h"
 #include "hw.h"
 #include "memory.h"
@@ -13,7 +14,12 @@ WiFiEventHandler wifiDisconnectHandler; /**< Handling Wi-Fi disconnect event. */
 
 String wifi_status = "Not connected.";
 
+DNSServer dnsServer;
+IPAddress apIP(4, 3, 2, 1);
+IPAddress netMsk(255, 255, 255, 0);
+
 void Network_create_AP();
+void Network_start_MDNS();
 
 Ticker create_ap_ticker(Network_create_AP, 6000, 1);
 
@@ -21,45 +27,34 @@ void OTA_init()
 {
    ArduinoOTA.setHostname(DEVICE_NAME);
    ArduinoOTA.onStart([]()
-                      {
-#ifdef DEBUG
-                         Serial.printf("Network: Start OTA updating %s\n",
-                                       (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem");
-#endif
+                      { DEBUG_PRINTF("Network: Start OTA updating %s\n",
+                           (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem");
                          if (ArduinoOTA.getCommand() == U_FS)
                             LittleFS.end(); });
 
    ArduinoOTA.onEnd([]()
-                    {
-#ifdef DEBUG
-                     Serial.println("Network: OTA updating ended");
-#endif 
-                  Restart_device(true); });
-#ifdef DEBUG
+                    { DEBUG_PRINTLN("Network: OTA updating ended");
+                     Restart_device(true); });
+
    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
-                         { Serial.printf("Network: OTA update progress: %u%%\r", (progress / (total / 100))); });
-#endif
+                         { DEBUG_PRINTF("Network: OTA update progress: %u%%\r", (progress / (total / 100))); });
+
    ArduinoOTA.onError([](ota_error_t error)
-                      {
-#ifdef DEBUG
-      Serial.printf("Network: OTA error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR)
-         Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR)
-         Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR)
-         Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR)
-         Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR)
-         Serial.println("End Failed");
-#endif
-                   Restart_device(true); });
+                      { DEBUG_PRINTF("Network: OTA error[%u]: ", error);
+                        if (error == OTA_AUTH_ERROR)
+                           DEBUG_PRINTLN("Auth Failed");
+                        else if (error == OTA_BEGIN_ERROR)
+                           DEBUG_PRINTLN("Begin Failed");
+                        else if (error == OTA_CONNECT_ERROR)
+                           DEBUG_PRINTLN("Connect Failed");
+                        else if (error == OTA_RECEIVE_ERROR)
+                           DEBUG_PRINTLN("Receive Failed");
+                        else if (error == OTA_END_ERROR)
+                           DEBUG_PRINTLN("End Failed");
+                                    Restart_device(true); });
 
    ArduinoOTA.begin();
-#ifdef DEBUG
-   Serial.println("Network: OTA ready");
-#endif
+   DEBUG_PRINTLN("Network: OTA ready");
 }
 
 /**
@@ -70,9 +65,7 @@ void OTA_init()
  */
 void onWifiDisconnect(const WiFiEventStationModeDisconnected &event)
 {
-#ifdef DEBUG
-   Serial.println("Network: Disconnected from Wi-Fi.");
-#endif
+   DEBUG_PRINTLN("Network: Disconnected from Wi-Fi.");
    wifi_status = "Disconnected from " + WiFi.SSID();
    Set_clock_state(CLOCK_STATE_SERVER_DOWN);
 }
@@ -86,27 +79,37 @@ void onWifiDisconnect(const WiFiEventStationModeDisconnected &event)
  */
 void onWifiConnect(const WiFiEventStationModeGotIP &event)
 {
-#ifdef DEBUG
-   Serial.printf("Network: Connected to Wi-Fi as %s, IP: %s\n", DEVICE_NAME, WiFi.localIP().toString().c_str());
-#endif
+   DEBUG_PRINTF("Network: Connected to Wi-Fi as %s, IP: %s\n", DEVICE_NAME, WiFi.localIP().toString().c_str());
    create_ap_ticker.stop();
    wifi_status = "Connected to " + WiFi.SSID();
    WiFi.setAutoReconnect(true);
-   wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
-   MDNS.notifyAPChange();
+   Network_start_MDNS();
    OTA_init();
+   wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
    Webserver_start();
-   Set_clock_state(CLOCK_STATE_IP);
-   Mqtt_init();
    Mqtt_connect();
+   Set_clock_state(CLOCK_STATE_IP);
 }
 
 void Network_create_AP()
 {
    wifi_status = "AP Mode";
    Set_clock_state(CLOCK_STATE_AP);
-   WiFi.softAP(DEVICE_NAME);
+   WiFi.disconnect(); // Stop trying to connect to the WiFi.
+   WiFi.softAPConfig(apIP, apIP, netMsk);
+   DEBUG_PRINTF("Creating AP, with IP: %s\n", WiFi.softAPIP().toString().c_str());
+   WiFi.softAP(DEVICE_NAME, "12345678");
+   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+   dnsServer.start(53, "*", WiFi.softAPIP());
+   Network_start_MDNS();
+   OTA_init();
    Webserver_start();
+}
+
+void Network_start_MDNS()
+{
+   if (!MDNS.begin(DEVICE_NAME))
+      DEBUG_PRINTLN("Network: MDNS begin failed!");
 }
 
 /**
@@ -118,12 +121,11 @@ void Network_create_AP()
  */
 void Network_init()
 {
-   Webserver_init();
    Clock_init();
+   Mqtt_init();
    WiFi.mode(WIFI_STA);
    WiFi.setHostname(DEVICE_NAME);
    wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
-   MDNS.begin(DEVICE_NAME);
    WiFi.begin();
 }
 
@@ -135,9 +137,7 @@ void Network_init()
  */
 void Network_reset()
 {
-#ifdef DEBUG
-   Serial.println("\nNetwork: Resetting Wifi\n");
-#endif
+   DEBUG_PRINTLN("\nNetwork: Resetting Wifi\n");
    wifiDisconnectHandler = NULL;
    ESP.eraseConfig();
 }
@@ -150,12 +150,18 @@ String Get_wifi_ssid()
 {
    return WiFi.SSID();
 }
+String Get_wifi_ip_address()
+{
+   if (WiFi.status() == WL_CONNECTED)
+      return WiFi.localIP().toString();
+   else if (WiFi.getMode() == WIFI_AP_STA)
+      return WiFi.softAPIP().toString();
+   return "";
+}
 
 void Set_wifi_credentials(String ssid, String pwd)
 {
-#ifdef DEBUG
-   Serial.printf("Network: New Wi-Fi saved: %s\n", ssid.c_str());
-#endif
+   DEBUG_PRINTF("Network: New Wi-Fi saved: %s\n", ssid.c_str());
    wifiDisconnectHandler = NULL;
    struct station_config conf;
    memcpy(reinterpret_cast<char *>(conf.ssid), ssid.c_str(), 32);
@@ -168,12 +174,20 @@ void Disable_WifiDisconnectHandler()
    wifiDisconnectHandler = NULL;
 }
 
+/**
+ * @brief Network's cyclic task @ 100ms
+ *
+ * The function updates the Wi-Fi manager's webserver, if it's active, and updated the MQTT submodule.
+ *
+ */
 void Network_100ms_task()
 {
    create_ap_ticker.update();
 
    if (WiFi.status() != WL_CONNECTED && WiFi.getMode() != WIFI_AP_STA && create_ap_ticker.state() != RUNNING)
       create_ap_ticker.start();
+   else if (WiFi.getMode() == WIFI_AP_STA)
+      dnsServer.processNextRequest();
 
    ArduinoOTA.handle();
    MDNS.update();

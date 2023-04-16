@@ -1,5 +1,6 @@
 #include <EEPROM.h>
 #include <Arduino.h>
+#include "hw.h"
 #include "network.h"
 #include "memory.h"
 
@@ -47,9 +48,7 @@ void Memory_init()
         Memory_write((char *)&(buffer_u8 = 1), EEPROM_MQTT_QOSPUB_ADDR, sizeof(buffer_u8));
         for (int i = 0; i < EEPROM_TIMESTAMP_SIZE; i++)
             Memory_write((char *)&(buffer_u8 = 0), EEPROM_TIMESTAMP_ADDR + i, sizeof(buffer_u8));
-#ifdef DEBUG
-        Serial.println("\nMemory: Memory wasn't initialized. Initalizing now.\n");
-#endif
+        DEBUG_PRINTLN("\nMemory: Memory wasn't initialized. Initalizing now.\n");
     }
 }
 

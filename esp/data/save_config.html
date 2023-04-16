@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -13,36 +13,15 @@
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-3">
-        <div class="container">
-            <a class="navbar-brand" href="#">%DEV_NAME%</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="collapsibleNavbar">
-                <ul class="navbar-nav ms-3 mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/settings">Settings</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#about">About</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    %NAVBAR%
 
     <!-- Save Config -->
-    <div class="card w-75 mx-auto">
+    <div class="card w-50 mx-auto">
         <h5 class="card-header">Save Configuration</h5>
         <h5 class="text-muted mx-auto mt-3 px-3">Configuration saved!</h5>
 
-        <div class="btn-group mx-auto my-3">
-            <button type="button" onclick="location.href='/settings'" class="btn btn-primary">Back</button>
+        <div class="mx-auto my-3 d-flex justify-content-center">
+            <button type="button" onclick="history.back()" class="btn btn-primary">Back</button>
             <button type="button" onclick="location.href='/'" class="btn btn-primary ms-3">Home</button>
         </div>
     </div>
