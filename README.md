@@ -5,6 +5,7 @@
 ### Serial
 ![](./docs/screenshots/avrdudess.png)
 
+
 1. Download this UI: [AVRDUDESS](https://github.com/ZakKemble/AVRDUDESS/releases).
 2. Download the latest precompiled [`firmware.hex`](https://github.com/ambarusa/Time-Keeper/tree/master/build) file from one of the `build/atm328p_xxx` directories (depending on your clock type).
 3. Open the flasher tool, and load the **Arduino Nano (ATmega328P)** preset (as it's on the right side of the screenshot above). This will set up the tool properly.
@@ -18,6 +19,8 @@ Download the latest [`firmware.bin`](https://github.com/ambarusa/Time-Keeper/tre
 
 - Tasmotizer ([Releases](https://github.com/tasmota/tasmotizer/releases))
 - NodeMCU PyFlasher ([Releases](https://github.com/marcelstoer/nodemcu-pyflasher/releases))
+
+If your chip has no prebuilt `combined.bin`, it means that the memory is too small, in that case use the `firmware.bin` from the same directory instead.
 
 ### OTA Flashing
 You can flash your device with OTA, if the current firmware running supports it (an older Time Keeper firmware, or just the BasicOTA.ino example sketch).
