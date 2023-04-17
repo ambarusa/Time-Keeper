@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -7,36 +7,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Bootstrap CSS -->
-    <link href="style.css" rel="stylesheet">
+    <link href="bootstrap.min.css" rel="stylesheet">
 
     <title>%DEV_NAME% - Home</title>
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-3">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">%DEV_NAME%</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav ms-3 mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/settings">Settings</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#about">About</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    %NAVBAR%
 
     <!-- Light -->
     <div class="card w-50 mx-auto">
@@ -48,12 +25,13 @@
             </div>
             %LIGHT_FORM%
         </form>
-        <div class="d-grid col-6 mx-auto mb-3">
+        <div class="mx-auto mb-3">
             <button class="btn btn-primary btn-lg" id="light_submit">Submit</button>
         </div>
     </div>
-
+    
     <script src="index.js"></script>
+    <script src="bootstrap.min.js"></script>
 </body>
 
 </html>

@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include "NTPClient.h"
+#include "hw.h"
 #include "memory.h"
 #include "network.h"
 
@@ -21,9 +22,7 @@ esp_states_t esp_states_u24;
 void Clock_skip_ip()
 {
     skip_ip_b = true;
-#ifdef DEBUG
-    Serial.printf("Clock: IP displaying will be skipped\n");
-#endif
+    DEBUG_PRINTLN("Clock: IP displaying will be skipped\n");
 }
 
 uint32_t Get_IPAddress_fragment()
@@ -102,10 +101,12 @@ void Set_manual_mode(boolean value)
     if (manual_mode_b == value)
         return;
 
+    /* Don't allow to disable manual mode when there's no internet connection */
+    if (WiFi.getMode() != WIFI_STA && value == false)
+        return;
+
     manual_mode_b = value;
-#ifdef DEBUG
-    Serial.printf("Clock: Manual Mode was set to %s\n", (value == 1) ? "ON" : "OFF");
-#endif
+    DEBUG_PRINTF("Clock: Manual Mode was set to %s\n", (value == 1) ? "ON" : "OFF");
     Memory_write((char *)&value, EEPROM_MANUAL_MODE_ADDR, sizeof(value));
 }
 void Set_lightMode(uint8_t value)
@@ -114,15 +115,15 @@ void Set_lightMode(uint8_t value)
         return;
 
     esp_states_u24.lightMode = light_modes_t(value);
-#ifdef DEBUG
-    Serial.printf("Clock: Light Mode set to %s\n", Get_light_mode_str().c_str());
-#endif
+    DEBUG_PRINTF("Clock: Light Mode set to %s\n", Get_light_mode_str().c_str());
     Mqtt_state_publish(mqtt_topic, (value == LIGHT_MODE_OFF) ? "OFF" : "ON");
 #if defined(FLEURIE)
     if (value != LIGHT_MODE_OFF)
         Mqtt_state_publish(mqtt_effect_topic, Get_light_mode_str());
 #endif
     Notify_ws_clients("LIGHTMODE", Get_light_mode_str());
+    if (value != LIGHT_MODE_OFF)
+        Memory_write((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8));
 }
 void Set_lightBrightness(uint8_t value)
 {
@@ -130,42 +131,37 @@ void Set_lightBrightness(uint8_t value)
         return;
 
     esp_states_u24.lightBrightness = value % 101;
-#ifdef DEBUG
-    Serial.printf("Clock: Brightness set to %i\n", value);
-#endif
+    DEBUG_PRINTF("Clock: Brightness set to %i\n", value);
 
 #if defined(FLEURIE)
     Mqtt_state_publish(mqtt_brightness_topic, String(value));
 #endif
     Notify_ws_clients("BRIGHTNESS", String(esp_states_u24.lightBrightness));
     if (esp_states_u24.clockState > CLOCK_STATE_IP)
-        Memory_write((char *)&value, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(uint8));
+        Memory_write((char *)&esp_states_u24.lightBrightness, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(uint8));
 }
 void Set_clock_state(uint8_t value)
 {
     if (esp_states_u24.clockState == (clock_states_t)value)
         return;
 
-    esp_states_u24.clockState = (clock_states_t)value;
-#ifdef DEBUG
-    Serial.printf("Clock: Clock State was set to %s\n", Get_clock_state_str().c_str());
-#endif
-    switch (esp_states_u24.clockState)
+    if (skip_ip_b && (clock_states_t)value == CLOCK_STATE_IP)
     {
-    case CLOCK_STATE_IP:
+        skip_ip_b = false;
+        return;
+    }
+    esp_states_u24.clockState = (clock_states_t)value;
+    DEBUG_PRINTF("Clock: Clock State was set to %s\n", Get_clock_state_str().c_str());
+    if (esp_states_u24.clockState == CLOCK_STATE_IP)
+    {
         timestamp_u32 = Get_IPAddress_fragment();
         if (!manual_mode_b)
         {
             ntp_client.setPoolServerName(ntp_server);
-            ntp_client.setUpdateInterval(NTP_POLL_TIMEOUT);
+            ntp_client.setUpdateInterval(NTP_POLL_TIMEOUT - 5); /* Making sure that the update is earlier than the cyclic check. */
             ntp_client.begin();
-#ifdef DEBUG
-            Serial.printf("Clock: Starting NTP Client\n");
-#endif
+            DEBUG_PRINTLN("Clock: Starting NTP Client\n");
         }
-        break;
-    default:
-        break;
     }
 
     if (esp_states_u24.clockState > CLOCK_STATE_IP)
@@ -173,6 +169,7 @@ void Set_clock_state(uint8_t value)
 }
 void Set_ntp_server(String server)
 {
+    force_sync_b = true;
     if (!strcmp(ntp_server, server.c_str()))
         return;
 
@@ -182,7 +179,6 @@ void Set_ntp_server(String server)
     ntp_client.setPoolServerName(ntp_server);
     if (!ntp_client.forceUpdate())
         ntp_client.begin();
-    force_sync_b = true;
 }
 void Set_timezone(int8 value)
 {
@@ -220,7 +216,8 @@ void Clock_init()
     if (!skip_ip_b)
     {
         timestamp_u32 = 0;
-        Set_lightBrightness(100);
+        esp_states_u24.lightBrightness = 100;
+        esp_states_u24.lightMode = LIGHT_MODE_MANUAL;
         esp_states_u24.clockState = CLOCK_STATE_START;
     }
 }
@@ -234,31 +231,30 @@ void Clock_task_1000ms()
         break;
     case CLOCK_STATE_IP:
         static uint8_t ip_state_timeout_u8 = (!skip_ip_b) ? TASK_06_SEC_TIMEOUT * 2 - 1 : 0;
-        if (ip_state_timeout_u8 == TASK_06_SEC_TIMEOUT)
-            timestamp_u32 = Get_IPAddress_fragment();
-        else if (!ip_state_timeout_u8)
+        if (!ip_state_timeout_u8)
         {
-            char brightness;
-            Memory_read(&brightness, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(brightness));
-            Set_lightBrightness(brightness);
+            Memory_read((char *)&esp_states_u24.lightBrightness, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(uint8_t));
+            Memory_read((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8_t));
 
-            if (!skip_ip_b)
-            {
-                Set_clock_state((manual_mode_b || ntp_client.isTimeSet()) ? CLOCK_STATE_VALID : CLOCK_STATE_SERVER_DOWN);
-                timestamp_u32 = timezone_s8 * HOUR_IN_SEC;
-                if (!manual_mode_b && ntp_client.isTimeSet())
-                    timestamp_u32 += ntp_client.getEpochTime();
-                else
-                    force_sync_b = true;
-            }
+            if (skip_ip_b)
+                Memory_read((char *)&timestamp_u32, EEPROM_TIMESTAMP_ADDR, EEPROM_TIMESTAMP_SIZE);
             else
             {
-                Memory_read((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8_t));
-                Memory_read((char *)&timestamp_u32, EEPROM_TIMESTAMP_ADDR, EEPROM_TIMESTAMP_SIZE);
+                if (manual_mode_b)
+                    Set_timestamp(CLOCK_STATE_VALID, 0);
+                else if (!manual_mode_b && ntp_client.isTimeSet())
+                    Set_timestamp(CLOCK_STATE_VALID, ntp_client.getEpochTime());
+                else
+                {
+                    Set_timestamp(CLOCK_STATE_SERVER_DOWN, 0);
+                    force_sync_b = true;
+                }
             }
 
             ip_state_timeout_u8 = TASK_06_SEC_TIMEOUT * 2 - 1;
         }
+        else if (!(ip_state_timeout_u8 % TASK_06_SEC_TIMEOUT))
+            timestamp_u32 = Get_IPAddress_fragment();
         ip_state_timeout_u8--;
         break;
     case CLOCK_STATE_SERVER_DOWN:
@@ -269,10 +265,9 @@ void Clock_task_1000ms()
         {
             if (ntp_client.isTimeSet())
             {
-                Set_clock_state(CLOCK_STATE_VALID);
-                uint32_t timestamp_new_u32 = ntp_client.getEpochTime() + timezone_s8 * HOUR_IN_SEC;
-                if (abs(int(timestamp_new_u32 - timestamp_u32)) < HOUR_IN_SEC || force_sync_b)
-                    timestamp_u32 = timestamp_new_u32;
+                uint32_t timestamp_new_u32 = ntp_client.getEpochTime();
+                if (abs(int(timestamp_new_u32 - timestamp_u32)) < HOUR_IN_SEC || esp_states_u24.clockState == CLOCK_STATE_SERVER_DOWN)
+                    Set_timestamp(CLOCK_STATE_VALID, timestamp_new_u32);
                 sync_timeout_u16 = NTP_POLL_TIMEOUT;
                 force_sync_b = false;
             }

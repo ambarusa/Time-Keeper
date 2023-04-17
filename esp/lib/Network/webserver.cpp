@@ -1,32 +1,10 @@
 #include <String.h>
-#include <LittleFS.h>
 #include "ESPAsyncWebServer.h"
+#include "ArduinoJson.h"
 #include "hw.h"
 #include "memory.h"
 #include "network.h"
-
-#if defined(FLEURIE)
-const String light_form = R"=====(
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="radio" name="light_mode" id="light_automatic">
-                <label class="form-check-label" for="light_auto">Automatic</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="light_mode" id="light_manual">
-                <label class="form-check-label" for="light_manual">Manual</label>
-            </div>
-            <div class="form-check">
-                <input type="range" class="form-range" id="brightness" min="3" max="100" step="1"
-                    value="%BRIGHTNESS_PCT%">
-            </div>)=====";
-
-#elif defined(PIXIE)
-const String light_form = R"=====(
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="light_mode" id="light_manual">
-                <label class="form-check-label" for="light_manual">ON</label>
-            </div>)=====";
-#endif
+#include "html_pages.h"
 
 AsyncWebServer webserver(80);
 AsyncWebSocket websocket("/ws");
@@ -41,9 +19,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         String first = strtok((char *)data, " ");
         String second = strtok(NULL, " ");
 
-#ifdef DEBUG
-        Serial.printf("\nWebserver: Received WS message: %s %s\n", first.c_str(), second.c_str());
-#endif
+        DEBUG_PRINTF("\nWebserver: Received WS message: %s %s\n", first.c_str(), second.c_str());
 
         if (first == "LIGHTMODE")
         {
@@ -61,14 +37,14 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
 void onSaveConfig(AsyncWebServerRequest *request)
 {
-    request->send(LittleFS, "/save_config.html", "text/html", false, processor);
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", save_config_html, save_config_html_size);
+    response->addHeader(F("Content-Encoding"), "gzip");
+    request->send(response);
 
     String form_type, name, value, ssid;
 
     form_type = request->getParam(0)->name();
-#ifdef DEBUG
-    Serial.printf("\nWebserver: %s form received\n", form_type.c_str());
-#endif
+    DEBUG_PRINTF("\nWebserver: %s form received\n", form_type.c_str());
     for (int i = 1; i < (uint8_t)request->params(); i++)
     {
         name = request->getParam(i)->name();
@@ -77,9 +53,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
         if (value.isEmpty() && name != "pwd")
             continue;
 
-#ifdef DEBUG
-        Serial.printf("Webserver: Received param: %s=%s\n", name.c_str(), value.c_str());
-#endif
+        DEBUG_PRINTF("Webserver: Received param: %s=%s\n", name.c_str(), value.c_str());
 
         if (form_type == "TIME")
         {
@@ -123,7 +97,9 @@ void onSaveConfig(AsyncWebServerRequest *request)
                 Set_mqtt_password(value.c_str());
             if (name == "autodisc")
                 Set_mqtt_autodiscovery(value);
-            Restart_device(true);
+            /* MQTT shall be only saved in AP mode, no need to restart */
+            if (i == (uint8_t)request->params() - 1 && WiFi.isConnected())
+                Restart_device(true);
         }
         if (form_type == "Wi-Fi")
         {
@@ -131,14 +107,17 @@ void onSaveConfig(AsyncWebServerRequest *request)
                 ssid = value;
             if (name == "pwd")
                 Set_wifi_credentials(ssid.c_str(), value.c_str());
-            Restart_device(false);
+            if (i == (uint8_t)request->params() - 1)
+                Restart_device(false);
         }
     }
 }
 
 void onResetConfig(AsyncWebServerRequest *request)
 {
-    request->send(LittleFS, "/reset_config.html", "text/html", false, processor);
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", reset_config_html, reset_config_html_size);
+    response->addHeader(F("Content-Encoding"), "gzip");
+    request->send(response);
 
     Memory_reset();
     Network_reset();
@@ -152,18 +131,32 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
     switch (type)
     {
     case WS_EVT_CONNECT:
-#ifdef DEBUG
-        Serial.printf("\nWebserver: WS client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-#endif
-        Notify_ws_clients("LIGHTMODE", Get_light_mode_str());
-#if defined(FLEURIE)
-        Notify_ws_clients("BRIGHTNESS", String(Get_esp_states().lightBrightness));
-#endif
-        break;
+    {
+        DEBUG_PRINTF("\nWebserver: WS client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+        StaticJsonDocument<512> root;
+        root["light_mode"] = Get_light_mode_str();
+        root["brightness"] = String(Get_esp_states().lightBrightness);
+        root["wifi_status"] = Get_wifi_status();
+        root["mqtt_status"] = Get_mqtt_status();
+        root["wifi_ssid"] = Get_wifi_ssid();
+        root["mqtt_en"] = String(Get_mqtt_enabled());
+        root["mqtt_host"] = Get_mqtt_host();
+        root["mqtt_port"] = String(Get_mqtt_port());
+        root["mqtt_qossub"] = String(Get_mqtt_qossub());
+        root["mqtt_qospub"] = String(Get_mqtt_qospub());
+        root["mqtt_cli"] = Get_mqtt_clientid();
+        root["mqtt_user"] = Get_mqtt_username();
+        root["mqtt_autodisc"] = Get_mqtt_autodiscovery();
+        root["ntp_tz"] = String(Get_ntp_timezone());
+        root["manual_mode"] = String(Get_manual_mode());
+        root["ntp_server"] = Get_ntp_server();
+        char payload[512];
+        serializeJson(root, payload);
+        websocket.text(client->id(), payload);
+    }
+    break;
     case WS_EVT_DISCONNECT:
-#ifdef DEBUG
-        Serial.printf("Webserver: WS client #%u disconnected\n", client->id());
-#endif
+        DEBUG_PRINTF("Webserver: WS client #%u disconnected\n", client->id());
         break;
     case WS_EVT_DATA:
         handleWebSocketMessage(arg, data, len);
@@ -178,76 +171,125 @@ void Notify_ws_clients(String key, String data)
 {
     if (!websocket.getClients().isEmpty())
     {
-#ifdef DEBUG
-        if (key != "TIME")
-            Serial.printf("Webserver: Send [%s %s] to WS clients\n", key.c_str(), data.c_str());
-#endif
+        DEBUG_PRINTF("Webserver: Send [%s %s] to WS clients\n", key.c_str(), data.c_str());
         websocket.textAll(key + " " + data);
     }
 }
 
-void Webserver_init()
+bool isIp(String str)
 {
-#ifdef DEBUG
-    if (LittleFS.begin())
-        Serial.println("Webserver: LittleFS mounted successfully");
-    else
-        Serial.println("Webserver: An error has occurred while mounting LittleFS");
-#else
-    LittleFS.begin();
-#endif
+    for (size_t i = 0; i < str.length(); i++)
+    {
+        int c = str.charAt(i);
+        if (c != '.' && (c < '0' || c > '9'))
+        {
+            return false;
+        }
+    }
+    return true;
+}
 
-    websocket.onEvent(onEvent);
-    webserver.addHandler(&websocket);
+boolean CaptivePortalHandled(AsyncWebServerRequest *request)
+{
+    // Serve Captive Portal only in AP mode or if there's a valid host in the HTTP Header
+    if (ON_STA_FILTER(request) || !request->hasHeader("Host"))
+        return false;
+
+    String hostHeader = request->getHeader("Host")->value();
+    if (!isIp(hostHeader) && hostHeader.indexOf(String(DEVICE_NAME) + ".local") < 0)
+    {
+        AsyncWebServerResponse *response = request->beginResponse(302);
+        response->addHeader(F("Location"), F("http://4.3.2.1"));
+        request->send(response);
+        return true;
+    }
+    return false;
 }
 
 void Webserver_start()
 {
     webserver.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-                 { request->send(LittleFS, "/index.html", "text/html", false, processor); });
+                 {  if (CaptivePortalHandled(request))
+                        return;
+                    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html, index_html_size);
+                    response->addHeader(F("Content-Encoding"),"gzip");
+                    response->addHeader(F("Cache-Control"),"no-cache");
+                    request->send(response); });
 
     webserver.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request)
-                 { request->send(LittleFS, "/settings.html", "text/html", false, processor); });
+                 {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html",
+                        settings_html, settings_html_size);
+                    response->addHeader(F("Content-Encoding"),"gzip");
+                    response->addHeader(F("Cache-Control"),"no-cache");
+                    request->send(response); });
 
-    webserver.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
-                 { request->send(LittleFS, "/style.css", "text/css"); });
+    webserver.on("/time_configuration", HTTP_GET, [](AsyncWebServerRequest *request)
+                 {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html",
+                        time_configuration_html, time_configuration_html_size);
+                    response->addHeader(F("Content-Encoding"),"gzip");
+                    response->addHeader(F("Cache-Control"),"no-cache");
+                    request->send(response); });
+
+    webserver.on("/bootstrap.min.css", HTTP_GET, [](AsyncWebServerRequest *request)
+                 {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/css",
+                        bootstrap_min_css, bootstrap_min_css_size);
+                    response->addHeader(F("Content-Encoding"),"gzip");
+                    response->addHeader(F("Cache-Control"),"no-cache");
+                    request->send(response); });
+
+    webserver.on("/bootstrap.min.js", HTTP_GET, [](AsyncWebServerRequest *request)
+                 {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript",
+                        bootstrap_min_js, bootstrap_min_js_size);
+                    response->addHeader(F("Content-Encoding"),"gzip");
+                    response->addHeader(F("Cache-Control"),"no-cache");
+                    request->send(response); });
 
     webserver.on("/index.js", HTTP_GET, [](AsyncWebServerRequest *request)
-                 { request->send(LittleFS, "/index.js", "text/javascript"); });
+                 {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript", 
+                        index_js, index_js_size);
+                    response->addHeader(F("Content-Encoding"),"gzip");
+                    response->addHeader(F("Cache-Control"),"no-cache");
+                    request->send(response); });
 
     webserver.on("/settings.js", HTTP_GET, [](AsyncWebServerRequest *request)
-                 { request->send(LittleFS, "/settings.js", "text/javascript"); });
+                 {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript",
+                        settings_js, settings_js_size);
+                    response->addHeader(F("Content-Encoding"),"gzip");
+                    response->addHeader(F("Cache-Control"),"no-cache");
+                    request->send(response); });
+    webserver.on("/time_configuration.js", HTTP_GET, [](AsyncWebServerRequest *request)
+                 {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript",
+                        time_configuration_js, time_configuration_js_size);
+                    response->addHeader(F("Content-Encoding"),"gzip");
+                    response->addHeader(F("Cache-Control"),"no-cache");
+                    request->send(response); });
 
     webserver.on("/save_config", HTTP_POST, onSaveConfig);
+
+    webserver.on("/save_config", HTTP_GET, onSaveConfig);
 
     webserver.on("/reset_config", HTTP_GET, onResetConfig);
 
     webserver.onNotFound([](AsyncWebServerRequest *request)
-                         { request->send(404, "text/plain", "Not found"); });
+                         {  if (CaptivePortalHandled(request))
+                                return;
+                            request->send(404, "text/plain", "Not found"); });
 
-#ifdef DEBUG
-    Serial.println("Webserver: Starting the webserver");
-#endif
+    DEBUG_PRINTLN("Webserver: Starting the webserver");
+    websocket.onEvent(onEvent);
+    webserver.addHandler(&websocket);
     webserver.begin();
 }
 
 void Webserver_stop()
 {
-#ifdef DEBUG
-    Serial.println("Webserver: Stopping the webserver");
-#endif
+    DEBUG_PRINTLN("Webserver: Stopping the webserver");
     webserver.end();
 }
 
 String processor(const String &var)
 {
-    if (var == "DEV_NAME")
-        return String(DEVICE_NAME);
-    else if (var == "LIGHT_FORM")
-        return light_form;
-    else if (var == "BRIGHTNESS_PCT")
-        return String(Get_esp_states().lightBrightness);
-    else if (var == "MANUAL_MODE")
+    if (var == "MANUAL_MODE")
         return Get_manual_mode() ? "checked" : "";
     else if (var == "NTP_SERVER")
         return Get_ntp_server();
