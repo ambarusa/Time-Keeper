@@ -58,7 +58,7 @@ function onMessage(event) {
         document.getElementById('wifi_status').innerHTML = data.wifi_status;
         document.getElementById('wifi_ssid').value = data.wifi_ssid;
         document.getElementById('mqtt_status').innerHTML = data.mqtt_status;
-        document.getElementById('mqtt_en').checked = data.mqtt_en === 'true';
+        document.getElementById('mqtt_en').checked = data.mqtt_en == true;
         processMQTTFields();
         document.getElementById('mqtt_host').value = data.mqtt_host;
         document.getElementById('mqtt_port').value = data.mqtt_port;
@@ -66,7 +66,6 @@ function onMessage(event) {
         document.getElementById('mqtt_qospub').value = data.mqtt_qospub;
         document.getElementById('mqtt_cli').value = data.mqtt_cli;
         document.getElementById('mqtt_user').value = data.mqtt_user;
-        document.getElementById('mqtt_pwd').value = data.mqtt_pwd;
         document.getElementById('mqtt_autodisc').value = data.mqtt_autodisc;
     } catch (error) {
         console.error(error);

@@ -101,6 +101,10 @@ void Set_manual_mode(boolean value)
     if (manual_mode_b == value)
         return;
 
+    /* Don't allow to disable manual mode when there's no internet connection */
+    if (WiFi.getMode() != WIFI_STA && value == false)
+        return;
+
     manual_mode_b = value;
     DEBUG_PRINTF("Clock: Manual Mode was set to %s\n", (value == 1) ? "ON" : "OFF");
     Memory_write((char *)&value, EEPROM_MANUAL_MODE_ADDR, sizeof(value));

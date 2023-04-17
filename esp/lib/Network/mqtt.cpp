@@ -47,6 +47,9 @@ void Mqtt_discovery_publish();
 
 String Get_mqtt_status()
 {
+   /* This check is necessary for better user experience in AP mode */
+   if (mqtt_enabled_u8 && !WiFi.isConnected())
+      mqtt_status = "Not connecting while in AP mode";
    return mqtt_status;
 }
 boolean Get_mqtt_enabled()
@@ -87,6 +90,9 @@ void Set_mqtt_enabled(int enabled)
    if (mqtt_enabled_u8 == enabled)
       return;
    mqtt_enabled_u8 = (boolean)enabled;
+   /* This check is necessary in AP, when the device doesn't restart */
+   if (!mqtt_enabled_u8 && !WiFi.isConnected())
+      mqtt_status = "Not enabled";
    Memory_write((char *)&mqtt_enabled_u8, EEPROM_MQTT_ENABLED_ADDR, sizeof(mqtt_enabled_u8));
 }
 void Set_mqtt_host(String host)
@@ -253,7 +259,7 @@ void Mqtt_init()
 
    if (!mqtt_enabled_u8)
    {
-      Serial.println("Network: MQTT not enabled.");
+      DEBUG_PRINTLN("Network: MQTT not enabled.");
       return;
    }
 

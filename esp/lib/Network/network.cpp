@@ -32,9 +32,10 @@ void OTA_init()
                          if (ArduinoOTA.getCommand() == U_FS)
                             LittleFS.end(); });
 
+   /* Make a clean restart to indicate the update was successful */
    ArduinoOTA.onEnd([]()
                     { DEBUG_PRINTLN("Network: OTA updating ended");
-                     Restart_device(true); });
+                     Restart_device(false); });
 
    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
                          { DEBUG_PRINTF("Network: OTA update progress: %u%%\r", (progress / (total / 100))); });
@@ -89,12 +90,14 @@ void onWifiConnect(const WiFiEventStationModeGotIP &event)
    Webserver_start();
    Mqtt_connect();
    Set_clock_state(CLOCK_STATE_IP);
+   Set_manual_mode(false);
 }
 
 void Network_create_AP()
 {
    wifi_status = "AP Mode";
    Set_clock_state(CLOCK_STATE_AP);
+   Set_manual_mode(true);
    WiFi.disconnect(); // Stop trying to connect to the WiFi.
    WiFi.softAPConfig(apIP, apIP, netMsk);
    DEBUG_PRINTF("Creating AP, with IP: %s\n", WiFi.softAPIP().toString().c_str());

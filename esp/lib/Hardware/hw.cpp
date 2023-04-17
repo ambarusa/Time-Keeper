@@ -112,17 +112,15 @@ void Serial_send_message()
     bytes_sent_u8++;
     if (bytes_sent_u8 > SERIAL_MESSAGE_LENGTH)
     {
-#if defined(DEBUG)
-        Serial.print("\n| Mode: ");
-        Serial.print(Get_light_mode_str());
-        Serial.print("| Intensity: ");
-        Serial.print(states_u24.lightBrightness);
-        Serial.print("| Clock State: ");
-        Serial.print(Get_clock_state_str());
-        Serial.print("| Timestamp: ");
-        Serial.print(timestamp_u32.timestamp);
-        Serial.println(" |");
-#endif
+        DEBUG_PRINT("\n| Mode: ");
+        DEBUG_PRINT(Get_light_mode_str());
+        DEBUG_PRINT("| Intensity: ");
+        DEBUG_PRINT(states_u24.lightBrightness);
+        DEBUG_PRINT("| Clock State: ");
+        DEBUG_PRINT(Get_clock_state_str());
+        DEBUG_PRINT("| Timestamp: ");
+        DEBUG_PRINT(timestamp_u32.timestamp);
+        DEBUG_PRINTLN(" |");
         bytes_sent_u8 = 0;
         send_data_b = false;
         checksum_old_u8 = checksum_u8;
@@ -139,9 +137,7 @@ void Hardware_init()
 
     if (restart_flg_u8)
     {
-#if defined(DEBUG)
-        Serial.println("\n\nHardware: Restoring states after the restart\n");
-#endif
+        DEBUG_PRINTLN("\n\nHardware: Restoring states after the restart\n");
         Clock_skip_ip();
         Memory_write((char *)&(restart_flg_u8 = 0), EEPROM_RESTART_FLG_ADDR, sizeof(restart_flg_u8));
     }

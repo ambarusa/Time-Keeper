@@ -97,7 +97,8 @@ void onSaveConfig(AsyncWebServerRequest *request)
                 Set_mqtt_password(value.c_str());
             if (name == "autodisc")
                 Set_mqtt_autodiscovery(value);
-            if (i == (uint8_t)request->params() - 1)
+            /* MQTT shall be only saved in AP mode, no need to restart */
+            if (i == (uint8_t)request->params() - 1 && WiFi.isConnected())
                 Restart_device(true);
         }
         if (form_type == "Wi-Fi")

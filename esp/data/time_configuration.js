@@ -45,7 +45,8 @@ function onMessage(event) {
         const data = JSON.parse(event.data);
         // set the time zone
         document.getElementById('ntp_tz').value = data.ntp_tz;
-        document.getElementById('manual_mode').checked = data.manual_mode === 'true';
+        document.getElementById('manual_mode').checked = data.manual_mode == true;
+        processTimeFields();
         document.getElementById('ntp_server').value = data.ntp_server;
     } catch (error) {
         console.error(error);
