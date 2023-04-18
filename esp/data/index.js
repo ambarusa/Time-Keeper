@@ -58,7 +58,6 @@ function onMessage(event) {
         // set the brightness
         if (brightness !== null) brightness.value = data.brightness;
     } catch (error) {
-        console.error(error);
         // it is not a JSON message
         var first = event.data.split(" ")[0];
         var second = event.data.split(" ")[1];

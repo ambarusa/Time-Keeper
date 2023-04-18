@@ -54,7 +54,6 @@ function onMessage(event) {
     try {
         // parse the JSON data from the message
         const data = JSON.parse(event.data);
-
         document.getElementById('wifi_status').innerHTML = data.wifi_status;
         document.getElementById('wifi_ssid').value = data.wifi_ssid;
         document.getElementById('mqtt_status').innerHTML = data.mqtt_status;
@@ -67,9 +66,7 @@ function onMessage(event) {
         document.getElementById('mqtt_cli').value = data.mqtt_cli;
         document.getElementById('mqtt_user').value = data.mqtt_user;
         document.getElementById('mqtt_autodisc').value = data.mqtt_autodisc;
-    } catch (error) {
-        console.error(error);
-    }
+    } catch { }
 }
 
 function processMQTTFields() {
