@@ -1,41 +1,8 @@
-var gateway = `ws://${window.location.hostname}/ws`;
-var websocket;
+const socket = require('./misc/socket');
+const setActiveNavLink = require('./misc/activeNavLink');
 
-var timer, timestamp;
-var manual_mode, ntp_fields;
-
-function setActiveNavLink() {
-    var currentUrl = window.location.pathname;
-    var links = document.querySelectorAll('nav a');
-    for (var i = 0; i < links.length; i++) {
-        if (links[i].classList.contains('navbar-brand'))
-            continue;
-        var linkUrl = links[i].pathname;
-        if (linkUrl === '/' && currentUrl === '/') {
-            links[i].classList.add('active');
-            break;
-        } else if (linkUrl !== '/' && currentUrl.startsWith(linkUrl)) {
-            links[i].classList.add('active');
-            break;
-        }
-    }
-}
-
-function initWebSocket() {
-    websocket = new WebSocket(gateway);
-    websocket.onopen = onOpen;
-    websocket.onclose = onClose;
-    websocket.onmessage = onMessage;
-}
-
-function onOpen(event) {
-    console.log('Connection opened');
-}
-
-function onClose(event) {
-    console.log('Connection closed');
-    setTimeout(initWebSocket, 2000);
-}
+let timer, timestamp;
+let manual_mode, ntp_fields;
 
 function onMessage(event) {
     console.log("WS Message received: " + event.data);
@@ -66,8 +33,8 @@ function processTimeFields() {
         clearInterval(timer);
     }
     document.getElementById("manual_mode_init").disabled = (manual_mode.checked) ? true : false;
-    var inputs = ntp_fields.querySelectorAll("input");
-    for (var i = 0; i < inputs.length; i++)
+    let inputs = ntp_fields.querySelectorAll("input");
+    for (let i = 0; i < inputs.length; i++)
         inputs[i].disabled = (manual_mode.checked) ? true : false;
 }
 
@@ -84,7 +51,7 @@ function onLoad() {
     ntp_fields = document.getElementById('ntp_fields');
 
     setActiveNavLink();
-    initWebSocket();
+    socket.init(onMessage)
 
     /* Handling Manual Mode Checkbox */
     manual_mode.addEventListener('change', processTimeFields);

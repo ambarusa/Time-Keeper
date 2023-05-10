@@ -1,32 +1,7 @@
-var gateway = `ws://${window.location.hostname}/ws`;
-var websocket;
+const socket = require('./misc/socket');
+const setActiveNavLink = require('./misc/activeNavLink');
 
-var timer;
-var mqtt_enabled, mqtt_fields;
-
-function setActiveNavLink() {
-    var currentUrl = window.location.pathname;
-    var links = document.querySelectorAll('nav a');
-    for (var i = 0; i < links.length; i++) {
-        if (links[i].classList.contains('navbar-brand'))
-            continue;
-        var linkUrl = links[i].pathname;
-        if (linkUrl === '/' && currentUrl === '/') {
-            links[i].classList.add('active');
-            break;
-        } else if (linkUrl !== '/' && currentUrl.startsWith(linkUrl)) {
-            links[i].classList.add('active');
-            break;
-        }
-    }
-}
-
-function initWebSocket() {
-    websocket = new WebSocket(gateway);
-    websocket.onopen = onOpen;
-    websocket.onclose = onClose;
-    websocket.onmessage = onMessage;
-}
+let mqtt_enabled, mqtt_fields;
 
 function initSwitch() {
     document.getElementById('reset_sw').addEventListener('click', function () {
@@ -37,15 +12,6 @@ function initSwitch() {
             // Do nothing!
         }
     });
-}
-
-function onOpen(event) {
-    console.log('Connection opened');
-}
-
-function onClose(event) {
-    console.log('Connection closed');
-    setTimeout(initWebSocket, 2000);
 }
 
 function onMessage(event) {
@@ -72,8 +38,8 @@ function onMessage(event) {
 function processMQTTFields() {
     mqtt_fields.style.display = (mqtt_enabled.checked) ? 'block' : 'none';
     document.getElementById("mqtt_en_init").disabled = (mqtt_enabled.checked) ? true : false;
-    var inputs = mqtt_fields.querySelectorAll("input");
-    for (var i = 0; i < inputs.length; i++)
+    let inputs = mqtt_fields.querySelectorAll("input");
+    for (let i = 0; i < inputs.length; i++)
         inputs[i].disabled = (mqtt_enabled.checked) ? false : true;
 }
 
@@ -90,7 +56,7 @@ function onLoad() {
     mqtt_fields = document.getElementById('mqtt_fields');
 
     setActiveNavLink();
-    initWebSocket();
+    socket.init(onMessage);
     initSwitch();
 
     /* Handling MQTT Enabled Checkbox */
