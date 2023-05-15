@@ -19,9 +19,7 @@
     <div class="card w-50 mx-auto mb-5">
         <h5 class="card-header">Wi-Fi Configuration</h5>
         <h4 class="text-muted mx-auto mt-3"><span id="wifi_status"></span></h4>
-        <form class="card-body was-validated" action="/save_config" method="post" id="wifi_form">
-            <input type="hidden" name="Wi-Fi">
-
+        <form class="card-body was-validated" action="/save_wifi" method="post" id="wifi_form">
             <div class="form-group row mb-3">
                 <label class="col-md-2 col-form-label" for="wifi_ssid">SSID</label>
                 <input type="text" class="form-control col-md me-3" id="wifi_ssid" name="ssid" placeholder="Wi-Fi SSID"
@@ -44,9 +42,7 @@
     <div class="card w-50 mx-auto mb-5">
         <h5 class="card-header">MQTT Configuration</h5>
         <h4 class="text-muted mx-auto mt-3"><span id="mqtt_status"></span></h4>
-        <form class="card-body was-validated" action="/save_config" method="post" id="mqtt_form">
-            <input type="hidden" name="MQTT">
-
+        <form class="card-body was-validated" action="/save_mqtt" method="post" id="mqtt_form">
             <div class="form-group row mb-3">
                 <input type="hidden" name="enabled" id="mqtt_en_init" value="0">
                 <label class="col-md-2 col-form-label" for="mqtt_en">MQTT Enabled</label>

@@ -35,7 +35,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     }
 }
 
-void onSaveConfig(AsyncWebServerRequest *request)
+void onSaveTime(AsyncWebServerRequest *request)
 {
     AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", save_config_html, save_config_html_size);
     response->addHeader(F("Content-Encoding"), "gzip");
@@ -77,6 +77,29 @@ void onSaveConfig(AsyncWebServerRequest *request)
                 Set_timezone(value.toInt());
             }
         }
+    }
+}
+
+void onSaveMqtt(AsyncWebServerRequest *request)
+{
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", save_config_html, save_config_html_size);
+    response->addHeader(F("Content-Encoding"), "gzip");
+    request->send(response);
+
+    String form_type, name, value, ssid;
+
+    form_type = request->getParam(0)->name();
+    DEBUG_PRINTF("\nWebserver: %s form received\n", form_type.c_str());
+    for (int i = 1; i < (uint8_t)request->params(); i++)
+    {
+        name = request->getParam(i)->name();
+        value = request->getParam(i)->value();
+
+        if (value.isEmpty() && name != "pwd")
+            continue;
+
+        DEBUG_PRINTF("Webserver: Received param: %s=%s\n", name.c_str(), value.c_str());
+
         if (form_type == "MQTT")
         {
             if (name == "enabled")
@@ -101,15 +124,34 @@ void onSaveConfig(AsyncWebServerRequest *request)
             if (i == (uint8_t)request->params() - 1 && WiFi.isConnected())
                 Restart_device(true);
         }
-        if (form_type == "Wi-Fi")
-        {
-            if (name == "ssid")
-                ssid = value;
-            if (name == "pwd")
-                Set_wifi_credentials(ssid.c_str(), value.c_str());
-            if (i == (uint8_t)request->params() - 1)
-                Restart_device(false);
-        }
+    }
+}
+
+void onSaveWifi(AsyncWebServerRequest *request)
+{
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", save_config_html, save_config_html_size);
+    response->addHeader(F("Content-Encoding"), "gzip");
+    request->send(response);
+
+    String name, value, ssid;
+
+    DEBUG_PRINTF("\nWebserver: %s form received\n", form_type.c_str());
+    for (int i = 0; i < (uint8_t)request->params(); i++)
+    {
+        name = request->getParam(i)->name();
+        value = request->getParam(i)->value();
+
+        if (value.isEmpty() && name != "pwd")
+            continue;
+
+        DEBUG_PRINTF("Webserver: Received param: %s=%s\n", name.c_str(), value.c_str());
+
+        if (name == "ssid")
+            ssid = value;
+        if (name == "pwd")
+            Set_wifi_credentials(ssid.c_str(), value.c_str());
+        if (i == (uint8_t)request->params() - 1)
+            Restart_device(false);
     }
 }
 
@@ -264,10 +306,10 @@ void Webserver_start()
                     response->addHeader(F("Cache-Control"),"no-cache");
                     request->send(response); });
 
-    webserver.on("/save_config", HTTP_POST, onSaveConfig);
-
-    webserver.on("/save_config", HTTP_GET, onSaveConfig);
-
+    webserver.on("/save_time", HTTP_POST, onSaveTime);
+    webserver.on("/save_mqtt", HTTP_POST, onSaveMqtt);
+    webserver.on("/save_wifi", HTTP_POST, onSaveWifi);
+    webserver.on("/save_time", HTTP_GET, onSaveTime);
     webserver.on("/reset_config", HTTP_GET, onResetConfig);
 
     webserver.onNotFound([](AsyncWebServerRequest *request)
