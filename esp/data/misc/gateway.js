@@ -1,1 +1,0 @@
-export const gateway = `ws://${window.location.hostname}/ws`;

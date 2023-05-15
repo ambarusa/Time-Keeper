@@ -1,4 +1,24 @@
-export default function setActiveNavLink() {
+const gateway = `ws://${window.location.hostname}/ws`;
+
+function onClose(e) {
+    console.log('Connection closed');
+    setTimeout(initWebSocket, 2000);
+}
+
+function onOpen(e) {
+    console.log('Connection opened');
+}
+
+const socket = {
+    init(onMessage) {
+        socket.websocket = new WebSocket(gateway);
+        socket.websocket.onopen = onOpen;
+        socket.websocket.onclose = onClose;
+        socket.websocket.onmessage = onMessage;
+    }
+};
+
+function setActiveNavLink() {
     const currentUrl = window.location.pathname;
     let links = document.querySelectorAll('nav a');
     for (let i = 0; i < links.length; i++) {

@@ -43,14 +43,13 @@ void onSaveTime(AsyncWebServerRequest *request)
 
     String form_type, name, value, ssid;
 
-    form_type = request->getParam(0)->name();
-    DEBUG_PRINTF("\nWebserver: %s form received\n", form_type.c_str());
-    for (int i = 1; i < (uint8_t)request->params(); i++)
+    DEBUG_PRINTLN("\nWebserver: Time form received\n");
+    for (int i = 0; i < (uint8_t)request->params(); i++)
     {
         name = request->getParam(i)->name();
         value = request->getParam(i)->value();
 
-        if (value.isEmpty() && name != "pwd")
+        if (value.isEmpty())
             continue;
 
         DEBUG_PRINTF("Webserver: Received param: %s=%s\n", name.c_str(), value.c_str());
@@ -88,9 +87,8 @@ void onSaveMqtt(AsyncWebServerRequest *request)
 
     String form_type, name, value, ssid;
 
-    form_type = request->getParam(0)->name();
-    DEBUG_PRINTF("\nWebserver: %s form received\n", form_type.c_str());
-    for (int i = 1; i < (uint8_t)request->params(); i++)
+    DEBUG_PRINTLN("\nWebserver: Mqtt form received\n");
+    for (int i = 0; i < (uint8_t)request->params(); i++)
     {
         name = request->getParam(i)->name();
         value = request->getParam(i)->value();
@@ -135,7 +133,7 @@ void onSaveWifi(AsyncWebServerRequest *request)
 
     String name, value, ssid;
 
-    DEBUG_PRINTF("\nWebserver: %s form received\n", form_type.c_str());
+    DEBUG_PRINTLN("\nWebserver: Wi-Fi form received\n");
     for (int i = 0; i < (uint8_t)request->params(); i++)
     {
         name = request->getParam(i)->name();
@@ -296,6 +294,12 @@ void Webserver_start()
     webserver.on("/settings.js", HTTP_GET, [](AsyncWebServerRequest *request)
                  {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript",
                         settings_js, settings_js_size);
+                    response->addHeader(F("Content-Encoding"),"gzip");
+                    response->addHeader(F("Cache-Control"),"no-cache");
+                    request->send(response); });
+    webserver.on("/misc.js", HTTP_GET, [](AsyncWebServerRequest *request)
+                 {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript",
+                        misc_js, misc_js_size);
                     response->addHeader(F("Content-Encoding"),"gzip");
                     response->addHeader(F("Cache-Control"),"no-cache");
                     request->send(response); });

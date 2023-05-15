@@ -1,6 +1,6 @@
-//IMPORTS
-const socket = require('./misc/socket')
-const setActiveNavLink = require('./misc/activeNavLink')
+// //IMPORTS
+// const socket = require('./misc/socket')
+// const setActiveNavLink = require('./misc/activeNavLink')
 
 //Variables
 let brightness;
