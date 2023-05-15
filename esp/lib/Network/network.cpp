@@ -13,6 +13,7 @@ WiFiEventHandler wifiConnectHandler;    /**< Handling Wi-Fi connect event. */
 WiFiEventHandler wifiDisconnectHandler; /**< Handling Wi-Fi disconnect event. */
 
 String wifi_status = "Not connected.";
+boolean was_connected_b = false; /**< This will prevent to create an AP, if the connection is lost during runtime. */
 
 DNSServer dnsServer;
 IPAddress apIP(4, 3, 2, 1);
@@ -67,7 +68,7 @@ void OTA_init()
 void onWifiDisconnect(const WiFiEventStationModeDisconnected &event)
 {
    DEBUG_PRINTLN("Network: Disconnected from Wi-Fi.");
-   wifi_status = "Disconnected from " + WiFi.SSID();
+   wifi_status = "Disconnected from Wi-Fi.";
    Set_clock_state(CLOCK_STATE_SERVER_DOWN);
 }
 
@@ -82,6 +83,7 @@ void onWifiConnect(const WiFiEventStationModeGotIP &event)
 {
    DEBUG_PRINTF("Network: Connected to Wi-Fi as %s, IP: %s\n", DEVICE_NAME, WiFi.localIP().toString().c_str());
    create_ap_ticker.stop();
+   was_connected_b = true;
    wifi_status = "Connected to " + WiFi.SSID();
    WiFi.setAutoReconnect(true);
    Network_start_MDNS();
@@ -186,7 +188,7 @@ void Disable_WifiDisconnectHandler()
 void Network_100ms_task()
 {
    create_ap_ticker.update();
-   if (WiFi.status() != WL_CONNECTED && WiFi.getMode() != WIFI_AP_STA && create_ap_ticker.state() != RUNNING)
+   if (!was_connected_b && WiFi.status() != WL_CONNECTED && WiFi.getMode() != WIFI_AP_STA && create_ap_ticker.state() != RUNNING)
       create_ap_ticker.start();
    else if (WiFi.getMode() == WIFI_AP_STA)
       dnsServer.processNextRequest();
