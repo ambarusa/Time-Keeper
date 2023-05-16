@@ -46,6 +46,7 @@ void ClockPacked()
 	{
 	case CLOCK_STATE_START: //    HELLO! message
 	{
+		wasValid_b = false;
 		PackedDisplayData.hour_ten_digit_st_ui8 = digit_seg_ui8[14];	// H
 		PackedDisplayData.hour_unit_digit_st_ui8 = digit_seg_ui8[15];	// E
 		PackedDisplayData.minute_ten_digit_st_ui8 = digit_seg_ui8[16];	// L
@@ -296,6 +297,13 @@ void TurnOffDisplay()
 	DisplayData.second_data = 0xFF;
 }
 
+void DisplayDigits()
+{
+	DisplayData.hour_data = (mainBuffer.hour_unit & 0x0F) << 4 | (mainBuffer.hour_ten & 0x0F);
+	DisplayData.minute_data = (mainBuffer.minute_unit & 0x0F) << 4 | (mainBuffer.minute_ten & 0x0F);
+	DisplayData.second_data = (mainBuffer.second_unit & 0x0F) << 4 | (mainBuffer.second_ten & 0x0F);
+}
+
 void Output_init()
 {
 #if defined(FOUR_DIGITS)
@@ -333,15 +341,30 @@ void ClockPacked()
 	}
 	switch (mainBuffer.esp_states.clockState)
 	{
-	case CLOCK_STATE_START:
+	case CLOCK_STATE_START: // Displaying all 0's as a starting state
 	{
+		wasValid_b = false;
 		DisplayData.hour_data = 0;
 		DisplayData.minute_data = 0;
 		DisplayData.second_data = 0;
 		break;
 	};
-	case CLOCK_STATE_AP:
-	case CLOCK_STATE_SERVER_DOWN:
+	case CLOCK_STATE_AP: // Blinking once per second
+	{
+		MessageDisplay01SecTimeout_u16++;
+		if (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT / 2)
+			TurnOffDisplay();
+		else if (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT)
+		{
+			DisplayData.hour_data = 0;
+			DisplayData.minute_data = 0;
+			DisplayData.second_data = 0;
+		}
+		else
+			MessageDisplay01SecTimeout_u16 = 0;
+		break;
+	};
+	case CLOCK_STATE_SERVER_DOWN: // Turned off for a second in ever 15 seconds
 	{
 		MessageDisplay15SecTimeout_u16++;
 		if (MessageDisplay15SecTimeout_u16 >= MESSAGE_DISPLAY_15_SEC_TIMEOUT)
@@ -355,14 +378,10 @@ void ClockPacked()
 			MessageDisplay01SecTimeout_u16++;
 		}
 		else
-		{
-			DisplayData.hour_data = (mainBuffer.hour_unit & 0x0F) << 4 | (mainBuffer.hour_ten & 0x0F);
-			DisplayData.minute_data = (mainBuffer.minute_unit & 0x0F) << 4 | (mainBuffer.minute_ten & 0x0F);
-			DisplayData.second_data = (mainBuffer.second_unit & 0x0F) << 4 | (mainBuffer.second_ten & 0x0F);
-		}
+			DisplayDigits();
 		break;
 	};
-	case CLOCK_STATE_IP:
+	case CLOCK_STATE_IP: // Displaying the IP address - more specific when there are only 4 digits
 #if defined(FOUR_DIGITS)
 	{
 		static uint16_t MessageDisplay03SecTimeout_u16;
@@ -384,16 +403,15 @@ void ClockPacked()
 		break;
 	};
 #endif
-	case CLOCK_STATE_VALID:
+	case CLOCK_STATE_VALID: // Displaying the clock
 	{
 		wasValid_b = true;
 #if defined(FOUR_DIGITS)
 		analogWrite(EN_COLON, (MessageDisplay01SecTimeout_u16 < MESSAGE_DISPLAY_01_SEC_TIMEOUT) << 4);
 		(++MessageDisplay01SecTimeout_u16) %= MESSAGE_DISPLAY_01_SEC_TIMEOUT * 2;
 #endif
-		DisplayData.hour_data = (mainBuffer.hour_unit & 0x0F) << 4 | (mainBuffer.hour_ten & 0x0F);
-		DisplayData.minute_data = (mainBuffer.minute_unit & 0x0F) << 4 | (mainBuffer.minute_ten & 0x0F);
-		DisplayData.second_data = (mainBuffer.second_unit & 0x0F) << 4 | (mainBuffer.second_ten & 0x0F);
+		DisplayDigits();
+		MessageDisplay15SecTimeout_u16 = 0;
 		MessageDisplay15SecTimeout_u16 = 0;
 		break;
 	};

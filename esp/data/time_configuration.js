@@ -48,9 +48,7 @@ function onMessage(event) {
         document.getElementById('manual_mode').checked = data.manual_mode == true;
         processTimeFields();
         document.getElementById('ntp_server').value = data.ntp_server;
-    } catch (error) {
-        console.error(error);
-    }
+    } catch { }
 }
 
 function getTimestamp() {
