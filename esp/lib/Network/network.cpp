@@ -30,6 +30,7 @@ void OTA_init()
    ArduinoOTA.onStart([]()
                       { DEBUG_PRINTF("Network: Start OTA updating %s\n",
                            (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem");
+                        Set_clock_state(CLOCK_STATE_OTA);
                          if (ArduinoOTA.getCommand() == U_FS)
                             LittleFS.end(); });
 

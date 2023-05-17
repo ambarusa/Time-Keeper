@@ -80,6 +80,8 @@ String Get_clock_state_str()
     {
     case CLOCK_STATE_START:
         return "Start";
+    case CLOCK_STATE_OTA:
+        return "OTA";
     case CLOCK_STATE_IP:
         return "IP";
     case CLOCK_STATE_AP:
