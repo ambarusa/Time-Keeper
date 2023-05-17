@@ -35,7 +35,7 @@ function onMessage(event) {
                 processSlider();
                 break;
             case "BRIGHTNESS":
-                brightness.value = second;
+                if (brightness !== null) brightness.value = second;
                 break;
         }
     }

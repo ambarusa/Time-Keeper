@@ -36,6 +36,8 @@ String Get_clock_state_str()
         return "Server Down";
     case CLOCK_STATE_VALID:
         return "Valid";
+    case CLOCK_STATE_OTA:
+        return "OTA";
     }
     return "";
 }
@@ -58,6 +60,7 @@ void Process_time(uint32_t timestamp_u32)
     switch (mainBuffer.esp_states.clockState)
     {
     case CLOCK_STATE_START:
+    case CLOCK_STATE_OTA:
         break;
     case CLOCK_STATE_IP:
         mainBuffer.hour_ten = (timestamp_u32 / 100000) % 10;

@@ -80,8 +80,6 @@ String Get_clock_state_str()
     {
     case CLOCK_STATE_START:
         return "Start";
-    case CLOCK_STATE_OTA:
-        return "OTA";
     case CLOCK_STATE_IP:
         return "IP";
     case CLOCK_STATE_AP:
@@ -90,6 +88,8 @@ String Get_clock_state_str()
         return "Server Down";
     case CLOCK_STATE_VALID:
         return "Valid";
+    case CLOCK_STATE_OTA:
+        return "OTA";
     }
     return "";
 }
@@ -139,7 +139,9 @@ void Set_lightBrightness(uint8_t value)
     Mqtt_state_publish(mqtt_brightness_topic, String(value));
 #endif
     Notify_ws_clients("BRIGHTNESS", String(esp_states_u24.lightBrightness));
-    if (esp_states_u24.clockState > CLOCK_STATE_IP)
+    if (esp_states_u24.clockState != CLOCK_STATE_START ||
+        esp_states_u24.clockState != CLOCK_STATE_IP ||
+        esp_states_u24.clockState != CLOCK_STATE_OTA)
         Memory_write((char *)&esp_states_u24.lightBrightness, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(uint8));
 }
 void Set_clock_state(uint8_t value)
@@ -166,7 +168,9 @@ void Set_clock_state(uint8_t value)
         }
     }
 
-    if (esp_states_u24.clockState > CLOCK_STATE_IP)
+    if (esp_states_u24.clockState != CLOCK_STATE_START ||
+        esp_states_u24.clockState != CLOCK_STATE_IP ||
+        esp_states_u24.clockState != CLOCK_STATE_OTA)
         Memory_write((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8));
 }
 void Set_ntp_server(String server)
@@ -197,7 +201,9 @@ void Set_timestamp(uint8 state, uint32 value)
     Set_clock_state((clock_states_t)state);
     timestamp_u32 = value + timezone_s8 * HOUR_IN_SEC;
 
-    if (esp_states_u24.clockState > CLOCK_STATE_IP)
+    if (esp_states_u24.clockState != CLOCK_STATE_START ||
+        esp_states_u24.clockState != CLOCK_STATE_IP ||
+        esp_states_u24.clockState != CLOCK_STATE_OTA)
     {
         for (int i = 0; i < EEPROM_TIMESTAMP_SIZE; i++)
         {
