@@ -12,22 +12,25 @@
     <title>%DEV_NAME% - Save Configuration</title>
 </head>
 
-<body>
-    %NAVBAR%
+<body class="d-flex flex-column vh-100">
+    <main class="flex-shrink-0">
 
-    <!-- Save Config -->
-    <div class="card w-50 mx-auto">
-        <h5 class="card-header">Save Configuration</h5>
-        <h5 class="text-muted mx-auto mt-3 px-3">Configuration saved!</h5>
+        %NAVBAR%
 
-        <div class="mx-auto my-3 d-flex justify-content-center">
-            <button type="button" onclick="history.back()" class="btn btn-primary">Back</button>
-            <button type="button" onclick="location.href='/'" class="btn btn-primary ms-3">Home</button>
+        <!-- Save Config -->
+        <div class="card col-lg-6 mx-auto mb-5">
+            <h5 class="card-header">Save Configuration</h5>
+            <h5 class="text-muted mx-auto mt-3 px-3">Configuration saved!</h5>
+
+            <div class="mx-auto my-3 d-flex justify-content-center">
+                <button type="button" onclick="history.back()" class="btn btn-primary">Back</button>
+                <button type="button" onclick="location.href='/'" class="btn btn-primary ms-3">Home</button>
+            </div>
         </div>
-    </div>
+    </main>
 
     %FOOTER%
-    
+
     <script src="bootstrap.min.js"></script>
 </body>
 

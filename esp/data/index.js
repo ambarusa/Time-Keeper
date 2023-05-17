@@ -1,22 +1,15 @@
-// //IMPORTS
-// const socket = require('./misc/socket')
-// const setActiveNavLink = require('./misc/activeNavLink')
-
-//Variables
 let brightness;
 
 
 function processSlider() {
     if (brightness === null)
         return;
-
-    const lightManual = document.getElementById("light_manual").checked;
-    if (lightManual.checked)
-        brightness.disabled = !lightManual.checked;
+    if (document.getElementById("light_manual").checked)
+        brightness.disabled = !document.getElementById("light_manual").checked;
     else
         brightness.disabled = true;
 }
-//Better name for id
+
 function onMessage(event) {
     console.log("WS Message received: " + event.data);
 
@@ -24,20 +17,19 @@ function onMessage(event) {
         // parse the JSON data from the message
         const data = JSON.parse(event.data);
         // set the light mode
-        idTag = "light_" + data.light_mode;
-        const id = document.getElementById(id.toLowerCase());
-        id.checked = true;
+        id = "light_" + data.light_mode;
+        document.getElementById(id.toLowerCase()).checked = true;
         processSlider();
         // set the brightness
         if (brightness !== null) brightness.value = data.brightness;
     } catch (error) {
         // it is not a JSON message
-        const first = event.data.split(" ")[0];
-        const second = event.data.split(" ")[1];
+        var first = event.data.split(" ")[0];
+        var second = event.data.split(" ")[1];
         switch (first) {
             case "LIGHTMODE":
                 id = "light_" + second;
-                id.checked = true;
+                document.getElementById(id.toLowerCase()).checked = true;
                 processSlider();
                 break;
             case "BRIGHTNESS":

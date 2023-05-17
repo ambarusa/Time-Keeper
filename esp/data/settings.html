@@ -12,116 +12,120 @@
     <title>%DEV_NAME% - Settings</title>
 </head>
 
-<body>
-    %NAVBAR%
+<body class="d-flex flex-column vh-100">
+    <main class="flex-shrink-0">
 
-    <!-- Wi-Fi -->
-    <div class="card col-lg-6 mx-auto mb-5">
-        <h5 class="card-header">Wi-Fi Configuration</h5>
-        <h4 class="text-muted mx-auto mt-3"><span id="wifi_status"></span></h4>
-        <form class="card-body needs-validation" novalidate action="/save_wifi" method="post" id="wifi_form">
-            <div class="mb-3">
-                <label class="form-label" for="wifi_ssid">SSID</label>
-                <input type="text" class="form-control" id="wifi_ssid" name="ssid" placeholder="Wi-Fi SSID" required>
-                <div class="invalid-feedback">Please provide an SSID.</div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label" for="wifi_pwd">Password</label>
-                <input type="password" class="form-control" id="wifi_pwd" name="pwd"
-                    placeholder="Leave empty if no password is required">
-            </div>
+        %NAVBAR%
 
-            <div class="d-grid col-5 mx-auto">
-                <button type="submit" class="btn btn-primary btn-lg">Submit</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- MQTT -->
-    <div class="card col-lg-6 mx-auto mb-5">
-        <h5 class="card-header">MQTT Configuration</h5>
-        <h4 class="text-muted mx-auto mt-3"><span id="mqtt_status"></span></h4>
-        <form class="card-body needs-validation" novalidate action="/save_mqtt" method="post" id="mqtt_form">
-            <div class="form-group form-check mb-3">
-                <input type="hidden" name="enabled" id="mqtt_en_init" value="0">
-                <input type="checkbox" class="form-check-input" id="mqtt_en" name="enabled" value="1">
-                <label class="form-label" for="mqtt_en">MQTT Enabled</label>
-            </div>
-            <div id="mqtt_fields">
+        <!-- Wi-Fi -->
+        <div class="card col-lg-6 mx-auto mb-5">
+            <h5 class="card-header">Wi-Fi Configuration</h5>
+            <h4 class="text-muted mx-auto mt-3"><span id="wifi_status"></span></h4>
+            <form class="card-body needs-validation" novalidate action="/save_wifi" method="post" id="wifi_form">
                 <div class="mb-3">
-                    <label class="form-label" for="mqtt_host">MQTT Host</label>
-                    <div class="input-group mb-3">
-                        <span class="input-group-text">mqtt://</span>
-                        <input type="text" class="form-control" id="mqtt_host" name="host"
-                            placeholder="MQTT Host Address" required>
-                        <div class="invalid-feedback">Please provide a MQTT Host.</div>
-                    </div>
-                    <label class="form-label" for="mqtt_port">MQTT Port</label>
-                    <input type="number" class="form-control" type="number" id="mqtt_port" name="port"
-                        placeholder="MQTT Port (default: 1883)" required>
-                    <div class="invalid-feedback">Please provide a port number.</div>
-                </div>
-                <div class="form-group row mb-3">
-                    <div class="form-group col-sm-6 mx-auto">
-                        <label class="form-label" for="mqtt_qossub">Subscribe QoS</label>
-                        <select class="form-select" id="mqtt_qossub" name="qossub" form="mqtt_form">
-                            <option value="0">0</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                        </select>
-                    </div>
-                    <div class="form-group col-sm-6 mx-auto">
-                        <label class="form-label" for="mqtt_qospub">Publish QoS</label>
-                        <select class="form-select" id="mqtt_qospub" name="qospub" form="mqtt_form">
-                            <option value="0">0</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="mqtt_cli">Client ID</label>
-                    <input type="text" class="form-control" id="mqtt_cli" name="clientid" placeholder="MQTT Client ID"
+                    <label class="form-label" for="wifi_ssid">SSID</label>
+                    <input type="text" class="form-control" id="wifi_ssid" name="ssid" placeholder="Wi-Fi SSID"
                         required>
-                    <div class="invalid-feedback">Please provide a client ID.</div>
+                    <div class="invalid-feedback">Please provide an SSID.</div>
                 </div>
                 <div class="mb-3">
-                    <label class="col-md-2 col-form-label" for="mqtt_user">Username</label>
-                    <input type="text" class="form-control col-md me-3" id="mqtt_user" name="user"
-                        placeholder="MQTT Username" required>
-                    <div class="invalid-feedback">Please provide a username.</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="mqtt_pwd">Password</label>
-                    <input type="password" class="form-control" id="mqtt_pwd" name="pwd"
+                    <label class="form-label" for="wifi_pwd">Password</label>
+                    <input type="password" class="form-control" id="wifi_pwd" name="pwd"
                         placeholder="Leave empty if no password is required">
                 </div>
-                <div class="mb-3">
-                    <label class="form-label" for="mqtt_autodisc">Autodiscovery topic</label>
-                    <input type="text" class="form-control" id="mqtt_autodisc" name="autodisc"
-                        placeholder="Leave empty for no autodiscovery">
+
+                <div class="d-grid col-5 mx-auto">
+                    <button type="submit" class="btn btn-primary btn-lg">Submit</button>
                 </div>
-            </div>
-
-            <div class="d-grid col-5 mx-auto">
-                <button type="submit" class="btn btn-primary btn-lg">Submit</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Other -->
-    <div class="card col-lg-6 mx-auto mb-5">
-        <h5 class="card-header">Other</h5>
-        <div class="card-body d-grid mx-auto">
-            <button type="submit" class="btn btn-primary btn-lg" id="restart_sw">Restart Device</button>
+            </form>
         </div>
-        <div class="card-body d-grid mx-auto">
-            <button type="submit" class="btn btn-danger btn-lg" id="reset_sw">Reset Settings</button>
+
+        <!-- MQTT -->
+        <div class="card col-lg-6 mx-auto mb-5">
+            <h5 class="card-header">MQTT Configuration</h5>
+            <h4 class="text-muted mx-auto mt-3"><span id="mqtt_status"></span></h4>
+            <form class="card-body needs-validation" novalidate action="/save_mqtt" method="post" id="mqtt_form">
+                <div class="form-group form-check mb-3">
+                    <input type="hidden" name="enabled" id="mqtt_en_init" value="0">
+                    <input type="checkbox" class="form-check-input" id="mqtt_en" name="enabled" value="1">
+                    <label class="form-label" for="mqtt_en">MQTT Enabled</label>
+                </div>
+                <div id="mqtt_fields">
+                    <div class="mb-3">
+                        <label class="form-label" for="mqtt_host">MQTT Host</label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">mqtt://</span>
+                            <input type="text" class="form-control" id="mqtt_host" name="host"
+                                placeholder="MQTT Host Address" required>
+                            <div class="invalid-feedback">Please provide a MQTT Host.</div>
+                        </div>
+                        <label class="form-label" for="mqtt_port">MQTT Port</label>
+                        <input type="number" class="form-control" type="number" id="mqtt_port" name="port"
+                            placeholder="MQTT Port (default: 1883)" required>
+                        <div class="invalid-feedback">Please provide a port number.</div>
+                    </div>
+                    <div class="form-group row mb-3">
+                        <div class="form-group col-sm-6 mx-auto">
+                            <label class="form-label" for="mqtt_qossub">Subscribe QoS</label>
+                            <select class="form-select" id="mqtt_qossub" name="qossub" form="mqtt_form">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-sm-6 mx-auto">
+                            <label class="form-label" for="mqtt_qospub">Publish QoS</label>
+                            <select class="form-select" id="mqtt_qospub" name="qospub" form="mqtt_form">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="mqtt_cli">Client ID</label>
+                        <input type="text" class="form-control" id="mqtt_cli" name="clientid"
+                            placeholder="MQTT Client ID" required>
+                        <div class="invalid-feedback">Please provide a client ID.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="col-md-2 col-form-label" for="mqtt_user">Username</label>
+                        <input type="text" class="form-control col-md me-3" id="mqtt_user" name="user"
+                            placeholder="MQTT Username" required>
+                        <div class="invalid-feedback">Please provide a username.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="mqtt_pwd">Password</label>
+                        <input type="password" class="form-control" id="mqtt_pwd" name="pwd"
+                            placeholder="Leave empty if no password is required">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="mqtt_autodisc">Autodiscovery topic</label>
+                        <input type="text" class="form-control" id="mqtt_autodisc" name="autodisc"
+                            placeholder="Leave empty for no autodiscovery">
+                    </div>
+                </div>
+
+                <div class="d-grid col-5 mx-auto">
+                    <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+                </div>
+            </form>
         </div>
-    </div>
+
+        <!-- Other -->
+        <div class="card col-lg-6 mx-auto mb-5">
+            <h5 class="card-header">Other</h5>
+            <div class="card-body d-grid mx-auto">
+                <button type="submit" class="btn btn-primary btn-lg" id="restart_sw">Restart Device</button>
+            </div>
+            <div class="card-body d-grid mx-auto">
+                <button type="submit" class="btn btn-danger btn-lg" id="reset_sw">Reset Settings</button>
+            </div>
+        </div>
+    </main>
 
     %FOOTER%
-    
+
     <script src="misc.js"></script>
     <script src="settings.js"></script>
     <script src="bootstrap.min.js"></script>

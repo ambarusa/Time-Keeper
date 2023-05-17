@@ -12,21 +12,25 @@
     <title>%DEV_NAME% - Reset Configuration</title>
 </head>
 
-<body>
-    %NAVBAR%
+<body class="d-flex flex-column vh-100">
+    <main class="flex-shrink-0">
 
-    <!-- Reset Config -->
-    <div class="card w-50 mx-auto">
-        <h5 class="card-header">Reset Configuration</h5>
-        <h6 class="text-muted mx-auto mt-3 px-3">Connect to %DEV_NAME%'s AP, then go to <a href="http://%DEV_NAME%.local">http://%DEV_NAME%.local</h6>
+        %NAVBAR%
 
-        <div class="mx-auto my-3 d-flex justify-content-center">
-            <button type="button" onclick="location.href='/'" class="btn btn-primary">Home</button>
+        <!-- Reset Config -->
+        <div class="card col-lg-6 mx-auto mb-5">
+            <h5 class="card-header">Reset Configuration</h5>
+            <h6 class="text-muted mx-auto mt-3 px-3">Connect to %DEV_NAME%'s AP, then go to <a
+                    href="http://%DEV_NAME%.local">http://%DEV_NAME%.local</h6>
+
+            <div class="mx-auto my-3 d-flex justify-content-center">
+                <button type="button" onclick="location.href='/'" class="btn btn-primary">Home</button>
+            </div>
         </div>
-    </div>
-
-    %FOOTER%
+    </main>
     
+    %FOOTER%
+
     <script src="bootstrap.min.js"></script>
 </body>
 

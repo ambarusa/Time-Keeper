@@ -12,72 +12,75 @@
     <title>%DEV_NAME% - Time Configuration</title>
 </head>
 
-<body>
-    %NAVBAR%
+<body class="d-flex flex-column vh-100">
+    <main class="flex-shrink-0">
 
-    <!-- Time -->
-    <div class="card col-lg-6 mx-auto mb-5">
-        <h5 class="card-header">Time Configuration</h5>
-        <form class="card-body needs-validation" novalidate action="/save_time" method="post" id="time_form">
-            <div class="mb-4">
-                <label class="form-label" for="ntp_tz">Timezone</label>
-                <div class="col-sm-4">
-                    <select class="form-select" id="ntp_tz" name="tz">
-                        <option value="-12">(GMT -12:00)</option>
-                        <option value="-11">(GMT -11:00)</option>
-                        <option value="-10">(GMT -10:00) </option>
-                        <option value="-9">(GMT -9:00)</option>
-                        <option value="-8">(GMT -8:00)</option>
-                        <option value="-7">(GMT -7:00)</option>
-                        <option value="-6">(GMT -6:00)</option>
-                        <option value="-5">(GMT -5:00)</option>
-                        <option value="-4">(GMT -4:00)</option>
-                        <option value="-3">(GMT -3:00)</option>
-                        <option value="-2">(GMT -2:00)</option>
-                        <option value="-1">(GMT -1:00)</option>
-                        <option value="0" selected>(GMT)</option>
-                        <option value="1">(GMT +1:00)</option>
-                        <option value="2">(GMT +2:00)</option>
-                        <option value="3">(GMT +3:00)</option>
-                        <option value="4">(GMT +4:00)</option>
-                        <option value="5">(GMT +5:00)</option>
-                        <option value="6">(GMT +6:00)</option>
-                        <option value="7">(GMT +7:00)</option>
-                        <option value="8">(GMT +8:00)</option>
-                        <option value="9">(GMT +9:00)</option>
-                        <option value="10">(GMT +10:00)</option>
-                        <option value="11">(GMT +11:00)</option>
-                        <option value="12">(GMT +12:00)</option>
-                        <option value="13">(GMT +13:00)</option>
-                        <option value="14">(GMT +14:00)</option>
-                    </select>
+        %NAVBAR%
+
+        <!-- Time -->
+        <div class="card col-lg-6 mx-auto mb-5">
+            <h5 class="card-header">Time Configuration</h5>
+            <form class="card-body needs-validation" novalidate action="/save_time" method="post" id="time_form">
+                <div class="mb-4">
+                    <label class="form-label" for="ntp_tz">Timezone</label>
+                    <div class="col-sm-4">
+                        <select class="form-select" id="ntp_tz" name="tz">
+                            <option value="-12">(GMT -12:00)</option>
+                            <option value="-11">(GMT -11:00)</option>
+                            <option value="-10">(GMT -10:00) </option>
+                            <option value="-9">(GMT -9:00)</option>
+                            <option value="-8">(GMT -8:00)</option>
+                            <option value="-7">(GMT -7:00)</option>
+                            <option value="-6">(GMT -6:00)</option>
+                            <option value="-5">(GMT -5:00)</option>
+                            <option value="-4">(GMT -4:00)</option>
+                            <option value="-3">(GMT -3:00)</option>
+                            <option value="-2">(GMT -2:00)</option>
+                            <option value="-1">(GMT -1:00)</option>
+                            <option value="0" selected>(GMT)</option>
+                            <option value="1">(GMT +1:00)</option>
+                            <option value="2">(GMT +2:00)</option>
+                            <option value="3">(GMT +3:00)</option>
+                            <option value="4">(GMT +4:00)</option>
+                            <option value="5">(GMT +5:00)</option>
+                            <option value="6">(GMT +6:00)</option>
+                            <option value="7">(GMT +7:00)</option>
+                            <option value="8">(GMT +8:00)</option>
+                            <option value="9">(GMT +9:00)</option>
+                            <option value="10">(GMT +10:00)</option>
+                            <option value="11">(GMT +11:00)</option>
+                            <option value="12">(GMT +12:00)</option>
+                            <option value="13">(GMT +13:00)</option>
+                            <option value="14">(GMT +14:00)</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-group form-check mb-3">
-                <input type="hidden" value="0" id="manual_mode_init" name="manual">
-                <input type="checkbox" class="form-check-input" id="manual_mode" name="manual">
-                <label class="form-label" for="manual_mode">Manual Mode</label>
-                <small class="text-muted ms-3"> (Sync the time from this device) </small>
-            </div>
-
-            <div id="ntp_fields">
-                <div class="mb-3">
-                    <label class="form-label" for="ntp_server">NTP Server</label>
-                    <input type="text" class="form-control" id="ntp_server" name="server"
-                        placeholder="NTP Server Address" required>
-                    <div class="invalid-feedback">Please provide an NTP server.</div>
+                <div class="form-group form-check mb-3">
+                    <input type="hidden" value="0" id="manual_mode_init" name="manual">
+                    <input type="checkbox" class="form-check-input" id="manual_mode" name="manual">
+                    <label class="form-label" for="manual_mode">Manual Mode</label>
+                    <small class="text-muted ms-3"> (Sync the time from this device) </small>
                 </div>
-            </div>
 
-            <div class="d-grid col-6 mx-auto">
-                <button type="submit" class="btn btn-primary btn-lg">Submit</button>
-            </div>
-        </form>
-    </div>
+                <div id="ntp_fields">
+                    <div class="mb-3">
+                        <label class="form-label" for="ntp_server">NTP Server</label>
+                        <input type="text" class="form-control" id="ntp_server" name="server"
+                            placeholder="NTP Server Address" required>
+                        <div class="invalid-feedback">Please provide an NTP server.</div>
+                    </div>
+                </div>
+
+                <div class="d-grid col-6 mx-auto">
+                    <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+                </div>
+            </form>
+        </div>
+    </main>
 
     %FOOTER%
-    
+
     <script src="misc.js"></script>
     <script src="time_configuration.js"></script>
     <script src="bootstrap.min.js"></script>
