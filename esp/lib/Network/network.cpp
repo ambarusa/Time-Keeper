@@ -52,7 +52,7 @@ void OTA_init()
                            DEBUG_PRINTLN("Receive Failed");
                         else if (error == OTA_END_ERROR)
                            DEBUG_PRINTLN("End Failed");
-                                    Restart_device(true); });
+                        Restart_device(true); });
 
    ArduinoOTA.begin();
    DEBUG_PRINTLN("Network: OTA ready");
