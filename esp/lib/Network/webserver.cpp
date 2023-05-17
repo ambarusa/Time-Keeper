@@ -54,27 +54,24 @@ void onSaveTime(AsyncWebServerRequest *request)
 
         DEBUG_PRINTF("Webserver: Received param: %s=%s\n", name.c_str(), value.c_str());
 
-        if (form_type == "TIME")
+        if (name == "manual")
         {
-            if (name == "manual")
+            if (value.toInt())
             {
-                if (value.toInt())
-                {
-                    Set_manual_mode(true);
-                    Set_timestamp(CLOCK_STATE_VALID, value.toInt());
-                }
-                else
-                    Set_manual_mode(false);
+                Set_manual_mode(true);
+                Set_timestamp(CLOCK_STATE_VALID, value.toInt());
             }
-            if (name == "server")
-            {
-                if (!Get_manual_mode())
-                    Set_ntp_server(value);
-            }
-            if (name == "tz")
-            {
-                Set_timezone(value.toInt());
-            }
+            else
+                Set_manual_mode(false);
+        }
+        if (name == "server")
+        {
+            if (!Get_manual_mode())
+                Set_ntp_server(value);
+        }
+        if (name == "tz")
+        {
+            Set_timezone(value.toInt());
         }
     }
 }
@@ -98,30 +95,27 @@ void onSaveMqtt(AsyncWebServerRequest *request)
 
         DEBUG_PRINTF("Webserver: Received param: %s=%s\n", name.c_str(), value.c_str());
 
-        if (form_type == "MQTT")
-        {
-            if (name == "enabled")
-                Set_mqtt_enabled(value.toInt());
-            if (name == "host")
-                Set_mqtt_host(value.c_str());
-            if (name == "port")
-                Set_mqtt_port(value.toInt());
-            if (name == "qossub")
-                Set_mqtt_qossub(value.toInt());
-            if (name == "qospub")
-                Set_mqtt_qospub(value.toInt());
-            if (name == "clientid")
-                Set_mqtt_clientid(value.c_str());
-            if (name == "user")
-                Set_mqtt_username(value.c_str());
-            if (name == "pwd")
-                Set_mqtt_password(value.c_str());
-            if (name == "autodisc")
-                Set_mqtt_autodiscovery(value);
-            /* MQTT shall be only saved in AP mode, no need to restart */
-            if (i == (uint8_t)request->params() - 1 && WiFi.isConnected())
-                Restart_device(true);
-        }
+        if (name == "enabled")
+            Set_mqtt_enabled(value.toInt());
+        if (name == "host")
+            Set_mqtt_host(value.c_str());
+        if (name == "port")
+            Set_mqtt_port(value.toInt());
+        if (name == "qossub")
+            Set_mqtt_qossub(value.toInt());
+        if (name == "qospub")
+            Set_mqtt_qospub(value.toInt());
+        if (name == "clientid")
+            Set_mqtt_clientid(value.c_str());
+        if (name == "user")
+            Set_mqtt_username(value.c_str());
+        if (name == "pwd")
+            Set_mqtt_password(value.c_str());
+        if (name == "autodisc")
+            Set_mqtt_autodiscovery(value);
+        /* MQTT shall be only saved in AP mode, no need to restart */
+        if (i == (uint8_t)request->params() - 1 && WiFi.isConnected())
+            Restart_device(true);
     }
 }
 

@@ -4,8 +4,10 @@ let brightness;
 function processSlider() {
     if (brightness === null)
         return;
-    if (document.getElementById("light_manual").checked)
-        brightness.disabled = !document.getElementById("light_manual").checked;
+
+    const lightManual = document.getElementById("light_manual").checked;
+    if (lightManual.checked)
+        brightness.disabled = !lightManual.checked;
     else
         brightness.disabled = true;
 }
@@ -17,19 +19,19 @@ function onMessage(event) {
         // parse the JSON data from the message
         const data = JSON.parse(event.data);
         // set the light mode
-        id = "light_" + data.light_mode;
-        document.getElementById(id.toLowerCase()).checked = true;
+        const id = document.getElementById(("light_" + data.light_mode).toLowerCase());
+        id.checked = true;
         processSlider();
         // set the brightness
         if (brightness !== null) brightness.value = data.brightness;
     } catch (error) {
         // it is not a JSON message
-        var first = event.data.split(" ")[0];
-        var second = event.data.split(" ")[1];
+        const first = event.data.split(" ")[0];
+        const second = event.data.split(" ")[1];
         switch (first) {
             case "LIGHTMODE":
                 id = "light_" + second;
-                document.getElementById(id.toLowerCase()).checked = true;
+                id.checked = true;
                 processSlider();
                 break;
             case "BRIGHTNESS":
