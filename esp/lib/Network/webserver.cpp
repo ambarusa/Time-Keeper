@@ -165,6 +165,15 @@ void onResetConfig(AsyncWebServerRequest *request)
     Restart_device(false);
 }
 
+void onRestart(AsyncWebServerRequest *request)
+{
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", save_config_html, save_config_html_size);
+    response->addHeader(F("Content-Encoding"), "gzip");
+    request->send(response);
+
+    Restart_device(false);
+}
+
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
              void *arg, uint8_t *data, size_t len)
 {
@@ -315,6 +324,7 @@ void Webserver_start()
     webserver.on("/save_wifi", HTTP_POST, onSaveWifi);
     webserver.on("/save_time", HTTP_GET, onSaveTime);
     webserver.on("/reset_config", HTTP_GET, onResetConfig);
+    webserver.on("/restart", HTTP_GET, onRestart);
 
     webserver.onNotFound([](AsyncWebServerRequest *request)
                          {  if (CaptivePortalHandled(request))
