@@ -2,6 +2,7 @@ Import("env")
 import os
 import gzip
 import htmlmin
+import datetime
 
 # Path to the output C header file
 header_file_path = 'lib/Network/html_pages.h'
@@ -57,6 +58,7 @@ print("\nPRE SCRIPT: Generating web related files and variables...\n")
 build_flags = env.ParseFlags(env['BUILD_FLAGS'])
 device_name = [build_flag for build_flag in build_flags.get('CPPDEFINES') ][0]
 device_name = device_name.lower().capitalize()
+build_date = datetime.datetime.today().strftime('%Y-%m-%d')
 
 # Read out specific html chunks to be replaced in the generic html file
 with open(os.path.join(html_input_dir, 'chunk_form_fleurie.html'), 'r') as f:
@@ -65,6 +67,8 @@ with open(os.path.join(html_input_dir, 'chunk_form_pixie.html'), 'r') as f:
     form_pixie = f.read()
 with open(os.path.join(html_input_dir, 'chunk_navbar.html'), 'r') as f:
     navbar = f.read()
+with open(os.path.join(html_input_dir, 'chunk_footer.html'), 'r') as f:
+    footer = f.read()
 
 # Clear the header file
 with open(header_file_path, 'w') as f:
@@ -82,7 +86,9 @@ for filename in os.listdir(html_input_dir):
     # Change device specific chunks in the webpage
     if filename.endswith('.html'):
         file_data = str_replace(file_data, "%NAVBAR%", navbar)
+        file_data = str_replace(file_data, "%FOOTER%", footer)
         file_data = str_replace(file_data, "%DEV_NAME%", device_name)
+        file_data = str_replace(file_data, "%BUILD_DATE%", build_date)
         if device_name == 'Fleurie':
             file_data = str_replace(file_data, "%LIGHT_FORM%", form_fleurie)
         elif device_name == 'Pixie':

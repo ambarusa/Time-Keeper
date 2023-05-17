@@ -2,6 +2,7 @@ const gateway = `ws://${window.location.hostname}/ws`;
 
 function onClose(e) {
     console.log('Connection closed');
+    socket.init((onMessage), 2000);
 }
 
 function onOpen(e) {
