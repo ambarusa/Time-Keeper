@@ -233,8 +233,14 @@ void Clock_task_1000ms()
         static uint8_t ip_state_timeout_u8 = (!skip_ip_b) ? TASK_06_SEC_TIMEOUT * 2 - 1 : 0;
         if (!ip_state_timeout_u8)
         {
-            Memory_read((char *)&esp_states_u24.lightBrightness, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(uint8_t));
-            Memory_read((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8_t));
+            /* Setting this way, so it updates on the website, and MQTT as well */
+            uint8_t brightness_u8;
+            Memory_read((char *)&brightness_u8, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(uint8_t));
+            Set_lightBrightness(brightness_u8);
+            esp_states_t states_u24;
+            Memory_read((char *)&states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8_t));
+            Set_lightMode(states_u24.lightMode);
+            Set_clock_state(states_u24.clockState);
 
             if (skip_ip_b)
                 Memory_read((char *)&timestamp_u32, EEPROM_TIMESTAMP_ADDR, EEPROM_TIMESTAMP_SIZE);

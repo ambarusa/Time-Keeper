@@ -1,40 +1,5 @@
-var gateway = `ws://${window.location.hostname}/ws`;
-var websocket;
+let brightness;
 
-var brightness;
-
-function setActiveNavLink() {
-    var currentUrl = window.location.pathname;
-    var links = document.querySelectorAll('nav a');
-    for (var i = 0; i < links.length; i++) {
-        if (links[i].classList.contains('navbar-brand')) 
-            continue;
-        var linkUrl = links[i].pathname;
-        if (linkUrl === '/' && currentUrl === '/') {
-            links[i].classList.add('active');
-            break;
-        } else if (linkUrl !== '/' && currentUrl.startsWith(linkUrl)) {
-            links[i].classList.add('active');
-            break;
-        }
-    }
-}
-
-function initWebSocket() {
-    websocket = new WebSocket(gateway);
-    websocket.onopen = onOpen;
-    websocket.onclose = onClose;
-    websocket.onmessage = onMessage;
-}
-
-function onOpen(event) {
-    console.log('Connection opened');
-}
-
-function onClose(event) {
-    console.log('Connection closed');
-    setTimeout(initWebSocket, 2000);
-}
 
 function processSlider() {
     if (brightness === null)
@@ -85,16 +50,17 @@ window.addEventListener('unload', onUnload);
 function onLoad() {
 
     setActiveNavLink();
-    initWebSocket();
+    socket.init(onMessage);
 
     brightness = document.getElementById('brightness');
     document.getElementById("light_form").addEventListener('change', processSlider);
     document.getElementById("light_submit").addEventListener('click', function () {
+
         mode = document.querySelector('input[name="light_mode"]:checked').id;
 
-        websocket.send("LIGHTMODE " + mode.split("_")[1] + " ");
+        socket.websocket.send("LIGHTMODE " + mode.split("_")[1] + " ");
         if (brightness !== null && mode.split("_")[1] === "manual")
-            websocket.send("BRIGHTNESS " + brightness.value + " ");
+            socket.websocket.send("BRIGHTNESS " + brightness.value + " ");
 
     });
 }
