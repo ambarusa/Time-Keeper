@@ -23,9 +23,7 @@
             <div class="mb-3">
                 <label class="form-label" for="wifi_ssid">SSID</label>
                 <input type="text" class="form-control" id="wifi_ssid" name="ssid" placeholder="Wi-Fi SSID" required>
-                <div class="invalid-feedback">
-                    Please provide an SSID.
-                  </div>
+                <div class="invalid-feedback">Please provide an SSID.</div>
             </div>
             <div class="mb-3">
                 <label class="form-label" for="wifi_pwd">Password</label>
@@ -43,7 +41,7 @@
     <div class="card col-lg-6 mx-auto mb-5">
         <h5 class="card-header">MQTT Configuration</h5>
         <h4 class="text-muted mx-auto mt-3"><span id="mqtt_status"></span></h4>
-        <form class="card-body" action="/save_mqtt" method="post" id="mqtt_form">
+        <form class="card-body needs-validation" novalidate action="/save_mqtt" method="post" id="mqtt_form">
             <div class="form-group form-check mb-3">
                 <input type="hidden" name="enabled" id="mqtt_en_init" value="0">
                 <input type="checkbox" class="form-check-input" id="mqtt_en" name="enabled" value="1">
@@ -56,10 +54,12 @@
                         <span class="input-group-text">mqtt://</span>
                         <input type="text" class="form-control" id="mqtt_host" name="host"
                             placeholder="MQTT Host Address" required>
+                        <div class="invalid-feedback">Please provide a MQTT Host.</div>
                     </div>
                     <label class="form-label" for="mqtt_port">MQTT Port</label>
                     <input type="number" class="form-control" type="number" id="mqtt_port" name="port"
                         placeholder="MQTT Port (default: 1883)" required>
+                    <div class="invalid-feedback">Please provide a port number.</div>
                 </div>
                 <div class="form-group row mb-3">
                     <div class="form-group col-sm-6 mx-auto">
@@ -83,11 +83,13 @@
                     <label class="form-label" for="mqtt_cli">Client ID</label>
                     <input type="text" class="form-control" id="mqtt_cli" name="clientid" placeholder="MQTT Client ID"
                         required>
+                    <div class="invalid-feedback">Please provide a client ID.</div>
                 </div>
                 <div class="mb-3">
                     <label class="col-md-2 col-form-label" for="mqtt_user">Username</label>
                     <input type="text" class="form-control col-md me-3" id="mqtt_user" name="user"
                         placeholder="MQTT Username" required>
+                    <div class="invalid-feedback">Please provide a username.</div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label" for="mqtt_pwd">Password</label>

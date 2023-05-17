@@ -1,6 +1,3 @@
-const socket = require('./misc/socket');
-const setActiveNavLink = require('./misc/activeNavLink');
-
 let mqtt_enabled, mqtt_fields;
 
 function initSwitch() {
@@ -8,8 +5,12 @@ function initSwitch() {
         if (confirm('This will reset everything. Continue?')) {
 
             location.replace("/reset_config")
-        } else {
-            // Do nothing!
+        }
+    });
+    document.getElementById('restart_sw').addEventListener('click', function () {
+        if (confirm('The device will restart. Continue?')) {
+
+            location.replace("/restart")
         }
     });
 }
@@ -62,25 +63,13 @@ function onLoad() {
     /* Handling MQTT Enabled Checkbox */
     mqtt_enabled.addEventListener('change', processMQTTFields);
 
-    /* Handling MQTT Form */
+    /* Validating MQTT Form */
     const mqtt_form = document.getElementById('mqtt_form');
-    mqtt_form.addEventListener('submit', (event) => {
+    mqtt_form.addEventListener('submit', submitValidation);
 
-        // stop form submission
-        event.preventDefault();
-
-        mqtt_form.submit();
-    });
-
-    /* Handling Wi-Fi Form */
+    /* Validating Wi-Fi Form */
     const wifi_form = document.getElementById('wifi_form');
-    wifi_form.addEventListener('submit', (event) => {
-
-        // stop form submission
-        event.preventDefault();
-
-        wifi_form.submit();
-    });
+    wifi_form.addEventListener('submit', submitValidation);
 }
 
 window.addEventListener('load', onLoad);

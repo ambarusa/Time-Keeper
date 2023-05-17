@@ -2,7 +2,6 @@ const gateway = `ws://${window.location.hostname}/ws`;
 
 function onClose(e) {
     console.log('Connection closed');
-    setTimeout(initWebSocket, 2000);
 }
 
 function onOpen(e) {
@@ -33,4 +32,12 @@ function setActiveNavLink() {
             break;
         }
     }
+}
+
+function submitValidation(event) {
+    if (!event.currentTarget.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+    }
+    event.currentTarget.classList.add('was-validated')
 }

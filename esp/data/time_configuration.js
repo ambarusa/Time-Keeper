@@ -1,6 +1,3 @@
-const socket = require('./misc/socket');
-const setActiveNavLink = require('./misc/activeNavLink');
-
 let timer, timestamp;
 let manual_mode, ntp_fields;
 
@@ -55,6 +52,10 @@ function onLoad() {
 
     /* Handling Manual Mode Checkbox */
     manual_mode.addEventListener('change', processTimeFields);
+
+    /* Validating Time Form*/
+    const time_form = document.getElementById('time_form');
+    time_form.addEventListener('submit', submitValidation);
 }
 
 window.addEventListener('load', onLoad);

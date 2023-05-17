@@ -18,7 +18,7 @@
     <!-- Time -->
     <div class="card col-lg-6 mx-auto mb-5">
         <h5 class="card-header">Time Configuration</h5>
-        <form class="card-body" action="/save_time" method="post" id="time_form">
+        <form class="card-body needs-validation" novalidate action="/save_time" method="post" id="time_form">
             <div class="mb-4">
                 <label class="form-label" for="ntp_tz">Timezone</label>
                 <div class="col-sm-4">
@@ -66,6 +66,7 @@
                     <label class="form-label" for="ntp_server">NTP Server</label>
                     <input type="text" class="form-control" id="ntp_server" name="server"
                         placeholder="NTP Server Address" required>
+                    <div class="invalid-feedback">Please provide an NTP server.</div>
                 </div>
             </div>
 
