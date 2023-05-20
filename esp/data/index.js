@@ -41,13 +41,7 @@ function onMessage(event) {
     }
 }
 
-// this will disable the leave page warning pop-up of the forms
-function onUnload(event) {
-    event.preventDefault();
-    event.returnValue = null;
-}
-
-window.addEventListener('unload', onUnload);
+window.addEventListener('unload', onPageUnload);
 
 function onLoad() {
 

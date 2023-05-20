@@ -42,3 +42,9 @@ function submitValidation(event) {
     }
     event.currentTarget.classList.add('was-validated')
 }
+
+// this will disable the leave page warning pop-up of the forms
+function onPageUnload(event) {
+    event.preventDefault();
+    event.returnValue = null;
+}

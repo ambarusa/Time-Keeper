@@ -324,9 +324,7 @@ void Mqtt_connect()
 
 void Mqtt_discovery_publish()
 {
-   const size_t size = 13 * JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(2);
-
-   StaticJsonDocument<size> root;
+   StaticJsonDocument<768> root;
 
    root["name"] = DEVICE_NAME;
    root["unique_id"] = String(ESP.getChipId()) + "-" + String(DEVICE_NAME);
@@ -355,8 +353,8 @@ void Mqtt_discovery_publish()
    device["name"] = "Time-Keeper";
    device["sw_version"] = "1.0";
 
-   char payload[1024];
-   serializeJsonPretty(root, payload);
+   char payload[768];
+   serializeJson(root, payload);
    uint16_t id = amqtt_client.publish(mqtt_config_topic, qospub, true, payload);
    DEBUG_PRINTF("MQTT Disovery Send [ID %i]: [%s]: \n%s\n", id, mqtt_config_topic, payload);
 }
