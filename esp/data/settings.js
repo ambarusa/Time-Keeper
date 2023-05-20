@@ -29,7 +29,21 @@ function onMessage(event) {
         document.getElementById('mqtt_cli').value = data.mqtt_cli;
         document.getElementById('mqtt_user').value = data.mqtt_user;
         document.getElementById('mqtt_autodisc').value = data.mqtt_autodisc;
-    } catch { }
+    } catch {
+        // it is not a JSON message
+        const first = event.data.split(" ")[0];
+        let second = event.data.split(" ")[1];
+        switch (first) {
+            case "MQTT_STATUS":
+                second = event.data.split(" ").slice(1).join(" ");
+                document.getElementById('mqtt_status').innerHTML = second;
+                break;
+            case "MQTT_EN":
+                document.getElementById('mqtt_en').checked = second == true;
+                processMQTTFields();
+                break;
+        }
+    }
 }
 
 function processMQTTFields() {

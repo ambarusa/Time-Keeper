@@ -6,7 +6,7 @@
 
 void Memory_init()
 {
-    EEPROM.begin(512);
+    EEPROM.begin(4096);
     boolean init_needed_b = false;
     uint32_t chipid_u32 = ESP.getChipId();
 

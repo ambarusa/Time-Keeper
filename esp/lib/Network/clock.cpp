@@ -176,12 +176,12 @@ void Set_clock_state(uint8_t value)
 void Set_ntp_server(String server)
 {
     force_sync_b = true;
+    /* Save it only if changes, but make a force update every time. */
     if (!strcmp(ntp_server, server.c_str()))
-        return;
-
-    strcpy(ntp_server, server.c_str());
-    Memory_write(ntp_server, EEPROM_NTP_SERVER_ADDR, EEPROM_NTP_SERVER_SIZE);
-
+    {
+        strcpy(ntp_server, server.c_str());
+        Memory_write(ntp_server, EEPROM_NTP_SERVER_ADDR, EEPROM_NTP_SERVER_SIZE);
+    }
     ntp_client.setPoolServerName(ntp_server);
     if (!ntp_client.forceUpdate())
         ntp_client.begin();

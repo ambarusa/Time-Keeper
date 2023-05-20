@@ -113,10 +113,10 @@ void onSaveMqtt(AsyncWebServerRequest *request)
             Set_mqtt_password(value.c_str());
         if (name == "autodisc")
             Set_mqtt_autodiscovery(value);
-        /* MQTT shall be only saved in AP mode, no need to restart */
-        if (i == (uint8_t)request->params() - 1 && WiFi.isConnected())
-            Restart_device(true);
     }
+    /* MQTT shall be only saved in AP mode, no need to restart */
+    if (WiFi.isConnected())
+        Restart_device(true);
 }
 
 void onSaveWifi(AsyncWebServerRequest *request)
@@ -142,9 +142,8 @@ void onSaveWifi(AsyncWebServerRequest *request)
             ssid = value;
         if (name == "pwd")
             Set_wifi_credentials(ssid.c_str(), value.c_str());
-        if (i == (uint8_t)request->params() - 1)
-            Restart_device(false);
     }
+    Restart_device(false);
 }
 
 void onResetConfig(AsyncWebServerRequest *request)
