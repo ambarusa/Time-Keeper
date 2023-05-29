@@ -37,11 +37,17 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
 void onSaveTime(AsyncWebServerRequest *request)
 {
+    /* If it is triggered, by a GET method, provide basic authentication */
+    if (request->method() == HTTP_GET)
+    {
+        if (!request->authenticate(DEVICE_NAME, "12345678"))
+            return request->requestAuthentication();
+    }
     AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", save_config_html, save_config_html_size);
     response->addHeader(F("Content-Encoding"), "gzip");
     request->send(response);
 
-    String form_type, name, value, ssid;
+    String name, value;
 
     DEBUG_PRINTLN("\nWebserver: Time form received\n");
     for (int i = 0; i < (uint8_t)request->params(); i++)
@@ -82,7 +88,7 @@ void onSaveMqtt(AsyncWebServerRequest *request)
     response->addHeader(F("Content-Encoding"), "gzip");
     request->send(response);
 
-    String form_type, name, value, ssid;
+    String name, value;
 
     DEBUG_PRINTLN("\nWebserver: Mqtt form received\n");
     for (int i = 0; i < (uint8_t)request->params(); i++)
