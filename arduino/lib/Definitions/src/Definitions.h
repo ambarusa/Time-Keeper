@@ -28,7 +28,8 @@ typedef enum
     CLOCK_STATE_IP,
     CLOCK_STATE_VALID,
     CLOCK_STATE_SERVER_DOWN,
-    CLOCK_STATE_AP
+    CLOCK_STATE_AP,
+    CLOCK_STATE_OTA
 } clock_states_t;
 
 typedef union {
@@ -189,7 +190,9 @@ const uint8_t digit_seg_ui8[] = {
 };
 
 #elif defined(PIXIE)
-
+/* Very careful with the indexing for the FOUR_DIGITS,
+ * the pinout is different, even for the minute and hour segments 
+ */
 typedef enum
 {
 #if defined(FOUR_DIGITS)

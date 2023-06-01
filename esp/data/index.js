@@ -5,7 +5,7 @@ function processSlider() {
     if (brightness === null)
         return;
 
-    const lightManual = document.getElementById("light_manual").checked;
+    const lightManual = document.getElementById("light_manual");
     if (lightManual.checked)
         brightness.disabled = !lightManual.checked;
     else
@@ -24,30 +24,24 @@ function onMessage(event) {
         processSlider();
         // set the brightness
         if (brightness !== null) brightness.value = data.brightness;
-    } catch (error) {
+    } catch {
         // it is not a JSON message
         const first = event.data.split(" ")[0];
         const second = event.data.split(" ")[1];
         switch (first) {
             case "LIGHTMODE":
-                id = "light_" + second;
+                const id = document.getElementById(("light_" + second).toLowerCase());
                 id.checked = true;
                 processSlider();
                 break;
             case "BRIGHTNESS":
-                brightness.value = second;
+                if (brightness !== null) brightness.value = second;
                 break;
         }
     }
 }
 
-// this will disable the leave page warning pop-up of the forms
-function onUnload(event) {
-    event.preventDefault();
-    event.returnValue = null;
-}
-
-window.addEventListener('unload', onUnload);
+window.addEventListener('unload', onPageUnload);
 
 function onLoad() {
 

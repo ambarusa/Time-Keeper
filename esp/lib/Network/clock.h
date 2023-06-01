@@ -7,7 +7,8 @@ typedef enum
     CLOCK_STATE_IP,
     CLOCK_STATE_VALID,
     CLOCK_STATE_SERVER_DOWN,
-    CLOCK_STATE_AP
+    CLOCK_STATE_AP,
+    CLOCK_STATE_OTA
 } clock_states_t;
 
 typedef enum

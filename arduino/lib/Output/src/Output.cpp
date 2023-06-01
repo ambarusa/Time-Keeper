@@ -147,6 +147,20 @@ void ClockPacked()
 		b_flag_Blink = 0;
 		break;
 	};
+	case CLOCK_STATE_OTA: //    OtA... message
+	{
+		wasValid_b = false;
+		PackedDisplayData.hour_ten_digit_st_ui8 = digit_seg_ui8[0];		// O
+		PackedDisplayData.hour_unit_digit_st_ui8 = digit_seg_ui8[11];	// t
+		PackedDisplayData.minute_ten_digit_st_ui8 = digit_seg_ui8[27];	// A
+		PackedDisplayData.minute_unit_digit_st_ui8 = digit_seg_ui8[28]; // .
+		PackedDisplayData.second_ten_digit_st_ui8 = digit_seg_ui8[28];	// .
+		PackedDisplayData.second_unit_digit_st_ui8 = digit_seg_ui8[28]; // .
+		mainBuffer.esp_states.lightMode = LIGHT_MODE_MANUAL;
+		mainBuffer.brightness = BRIGHTNESS_MAX;
+		b_flag_Blink = 0;
+		break;
+	}
 	default: //    -HELP- message
 	{
 		PackedDisplayData.hour_ten_digit_st_ui8 = digit_seg_ui8[23];	// -
@@ -413,6 +427,13 @@ void ClockPacked()
 		DisplayDigits();
 		MessageDisplay15SecTimeout_u16 = 0;
 		MessageDisplay15SecTimeout_u16 = 0;
+		break;
+	};
+	case CLOCK_STATE_OTA: // Displaying OTA as ASCII characters
+	{
+		DisplayData.hour_data = 79;
+		DisplayData.minute_data = 84;
+		DisplayData.second_data = 65;
 		break;
 	};
 	default:

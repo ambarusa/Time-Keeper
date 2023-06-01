@@ -90,9 +90,15 @@ void Set_mqtt_enabled(int enabled)
    if (mqtt_enabled_u8 == enabled)
       return;
    mqtt_enabled_u8 = (boolean)enabled;
-   /* This check is necessary in AP, when the device doesn't restart */
-   if (!mqtt_enabled_u8 && !WiFi.isConnected())
+   
+   if (!mqtt_enabled_u8)
+   {
       mqtt_status = "Not enabled";
+      /* This check is necessary in AP, when the device doesn't restart */
+      if (!WiFi.isConnected())
+         mqtt_status += " when offline";
+      
+   }
    Memory_write((char *)&mqtt_enabled_u8, EEPROM_MQTT_ENABLED_ADDR, sizeof(mqtt_enabled_u8));
 }
 void Set_mqtt_host(String host)
@@ -123,7 +129,7 @@ void Set_mqtt_clientid(String clientid)
    if (!strcmp(mqtt_clientid, clientid.c_str()))
       return;
 
-   strcpy(mqtt_host, clientid.c_str());
+   strcpy(mqtt_clientid, clientid.c_str());
    Memory_write((char *)mqtt_clientid, EEPROM_MQTT_CLIENTID_ADDR, EEPROM_MQTT_CLIENTID_SIZE);
 }
 void Set_mqtt_username(String user)
@@ -150,10 +156,10 @@ void Set_mqtt_autodiscovery(String autodisc)
 void onMqttConnect(bool sessionPresent)
 {
    mqtt_reconn_ticker.stop();
-   mqtt_status = "MQTT: Connected to MQTT.";
+   mqtt_status = "MQTT: Connected to MQTT";
 
    DEBUG_PRINTF("\nMQTT: Connected to %s:%i as %s\n", mqtt_host, mqtt_port_u16, mqtt_clientid);
-   Notify_ws_clients("MQTT", Get_mqtt_status());
+   Notify_ws_clients("MQTT_STATUS", Get_mqtt_status());
 
    amqtt_client.subscribe(mqtt_cmd_topic, qossub);
    amqtt_client.publish(mqtt_availability_topic, qospub, true, mqtt_birth_payload);
@@ -199,38 +205,38 @@ void onMqttMessage(char *topic, char *payload_raw, AsyncMqttClientMessagePropert
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 {
-   DEBUG_PRINTLN("MQTT: Disconnected from MQTT, reason: ");
+   DEBUG_PRINT("MQTT: Disconnected from MQTT, reason: ");
    if (reason == AsyncMqttClientDisconnectReason::TLS_BAD_FINGERPRINT)
    {
-      mqtt_status = "Bad server fingerprint.";
+      mqtt_status = "Bad server fingerprint";
    }
    else if (reason == AsyncMqttClientDisconnectReason::TCP_DISCONNECTED)
    {
-      mqtt_status = "TCP Disconnected.";
+      mqtt_status = "TCP Disconnected";
    }
    else if (reason == AsyncMqttClientDisconnectReason::MQTT_UNACCEPTABLE_PROTOCOL_VERSION)
    {
-      mqtt_status = "Unacceptable Protocol version.";
+      mqtt_status = "Unacceptable Protocol version";
    }
    else if (reason == AsyncMqttClientDisconnectReason::MQTT_IDENTIFIER_REJECTED)
    {
-      mqtt_status = "MQTT Identifier rejected.";
+      mqtt_status = "MQTT Identifier rejected";
    }
    else if (reason == AsyncMqttClientDisconnectReason::MQTT_SERVER_UNAVAILABLE)
    {
-      mqtt_status = "MQTT server unavailable.";
+      mqtt_status = "MQTT server unavailable";
    }
    else if (reason == AsyncMqttClientDisconnectReason::MQTT_MALFORMED_CREDENTIALS)
    {
-      mqtt_status = "MQTT malformed credentials.";
+      mqtt_status = "MQTT malformed credentials";
    }
    else if (reason == AsyncMqttClientDisconnectReason::MQTT_NOT_AUTHORIZED)
    {
-      mqtt_status = "MQTT not authorized.";
+      mqtt_status = "MQTT not authorized";
    }
    else if (reason == AsyncMqttClientDisconnectReason::ESP8266_NOT_ENOUGH_SPACE)
    {
-      mqtt_status = "Not enough space on ESP.";
+      mqtt_status = "Not enough space on ESP";
    }
    DEBUG_PRINTLN(mqtt_status);
    if (mqtt_reconn_ticker.counter() == MQTT_RECONN_RETRIES)
@@ -239,11 +245,12 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
       mqtt_enabled_u8 = false;
       mqtt_status = "Couldn't connect. Turned off until a new configuration";
       DEBUG_PRINTLN("MQTT: Couldn't connect. Disabling it until a new configuration");
+      Notify_ws_clients("MQTT_EN", String(Get_mqtt_enabled()));
    }
    else if (WiFi.isConnected() && mqtt_reconn_ticker.state() == STOPPED)
       mqtt_reconn_ticker.start();
 
-   Notify_ws_clients("MQTT", Get_mqtt_status());
+   Notify_ws_clients("MQTT_STATUS", Get_mqtt_status());
 }
 
 void Mqtt_init()
@@ -305,8 +312,6 @@ void Mqtt_init()
    amqtt_client.onConnect(onMqttConnect);
    amqtt_client.onDisconnect(onMqttDisconnect);
    amqtt_client.onMessage(onMqttMessage);
-
-   DEBUG_PRINTLN("MQTT: Initialized topics");
 }
 
 void Mqtt_connect()
@@ -319,9 +324,7 @@ void Mqtt_connect()
 
 void Mqtt_discovery_publish()
 {
-   const size_t size = 13 * JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(2);
-
-   StaticJsonDocument<size> root;
+   StaticJsonDocument<768> root;
 
    root["name"] = DEVICE_NAME;
    root["unique_id"] = String(ESP.getChipId()) + "-" + String(DEVICE_NAME);
@@ -350,8 +353,8 @@ void Mqtt_discovery_publish()
    device["name"] = "Time-Keeper";
    device["sw_version"] = "1.0";
 
-   char payload[1024];
-   serializeJsonPretty(root, payload);
+   char payload[768];
+   serializeJson(root, payload);
    uint16_t id = amqtt_client.publish(mqtt_config_topic, qospub, true, payload);
    DEBUG_PRINTF("MQTT Disovery Send [ID %i]: [%s]: \n%s\n", id, mqtt_config_topic, payload);
 }

@@ -22,24 +22,6 @@ void Input_init()
     pinMode(LIGHT_SENSOR_INPUT, INPUT);
 }
 
-String Get_clock_state_str()
-{
-    switch (mainBuffer.esp_states.clockState)
-    {
-    case CLOCK_STATE_START:
-        return "Start";
-    case CLOCK_STATE_IP:
-        return "IP";
-    case CLOCK_STATE_AP:
-        return "AP";
-    case CLOCK_STATE_SERVER_DOWN:
-        return "Server Down";
-    case CLOCK_STATE_VALID:
-        return "Valid";
-    }
-    return "";
-}
-
 /**
  * @brief Implementation of function, that processes the incoming timestamp.
  *
@@ -58,6 +40,7 @@ void Process_time(uint32_t timestamp_u32)
     switch (mainBuffer.esp_states.clockState)
     {
     case CLOCK_STATE_START:
+    case CLOCK_STATE_OTA:
         break;
     case CLOCK_STATE_IP:
         mainBuffer.hour_ten = (timestamp_u32 / 100000) % 10;
@@ -120,6 +103,40 @@ void Process_brightness(uint8_t value_u8)
 #endif
 }
 
+String Get_light_mode_str()
+{
+    switch (mainBuffer.esp_states.lightMode)
+    {
+    case LIGHT_MODE_MANUAL:
+        return "Manual";
+    case LIGHT_MODE_AUTO:
+        return "Automatic";
+    case LIGHT_MODE_OFF:
+        return "Off";
+    }
+    return "";
+}
+String Get_clock_state_str()
+{
+    switch (mainBuffer.esp_states.clockState)
+    {
+    case CLOCK_STATE_START:
+        return "Start";
+    case CLOCK_STATE_IP:
+        return "IP";
+    case CLOCK_STATE_AP:
+        return "AP";
+    case CLOCK_STATE_SERVER_DOWN:
+        return "Server Down";
+    case CLOCK_STATE_VALID:
+        return "Valid";
+    case CLOCK_STATE_OTA:
+        return "OTA";
+    }
+    return "";
+}
+
+
 /**
  * @brief Implementation of function that reads from the serial port.
  *
@@ -180,16 +197,30 @@ void Input_20ms_task()
             if (checksum_u8 == checksum_calc_u8)
             {
                 mainBuffer.esp_states.state = states_u24.state;
+                Process_brightness(states_u24.lightBrightness);
                 if (timestamp_u32.timestamp != timestamp_old_u32)
                     Process_time(timestamp_u32.timestamp);
                 timestamp_old_u32 = timestamp_u32.timestamp;
+                Serial.print("\n| Mode: ");
+                Serial.print(Get_light_mode_str());
+                Serial.print("| Intensity: ");
+                Serial.print(mainBuffer.esp_states.lightBrightness);
+                Serial.print("| Clock State: ");
+                Serial.print(Get_clock_state_str());
+                Serial.print("| Timestamp: ");
+                Serial.print(timestamp_u32.timestamp);
+                Serial.println(" |");
             }
             bytes_received_u8 = 0;
             checksum_calc_u8 = 0;
             Serial.flush();
         }
     }
-    Process_brightness(states_u24.lightBrightness);
+    /* The parameter doesn't matter.
+     * If the clock is Pixie, this will do nothing. In Fleurie it reads the light sensor instead
+     */
+    if (mainBuffer.esp_states.lightMode == LIGHT_MODE_AUTO)
+        Process_brightness(BRIGHTNESS_ZERO);
 }
 
 void Input_1000ms_task()

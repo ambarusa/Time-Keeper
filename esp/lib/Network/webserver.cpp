@@ -37,11 +37,17 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
 void onSaveTime(AsyncWebServerRequest *request)
 {
+    /* If it is triggered, by a GET method, provide basic authentication */
+    if (request->method() == HTTP_GET)
+    {
+        if (!request->authenticate(DEVICE_NAME, "12345678"))
+            return request->requestAuthentication();
+    }
     AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", save_config_html, save_config_html_size);
     response->addHeader(F("Content-Encoding"), "gzip");
     request->send(response);
 
-    String form_type, name, value, ssid;
+    String name, value;
 
     DEBUG_PRINTLN("\nWebserver: Time form received\n");
     for (int i = 0; i < (uint8_t)request->params(); i++)
@@ -82,7 +88,7 @@ void onSaveMqtt(AsyncWebServerRequest *request)
     response->addHeader(F("Content-Encoding"), "gzip");
     request->send(response);
 
-    String form_type, name, value, ssid;
+    String name, value;
 
     DEBUG_PRINTLN("\nWebserver: Mqtt form received\n");
     for (int i = 0; i < (uint8_t)request->params(); i++)
@@ -113,10 +119,10 @@ void onSaveMqtt(AsyncWebServerRequest *request)
             Set_mqtt_password(value.c_str());
         if (name == "autodisc")
             Set_mqtt_autodiscovery(value);
-        /* MQTT shall be only saved in AP mode, no need to restart */
-        if (i == (uint8_t)request->params() - 1 && WiFi.isConnected())
-            Restart_device(true);
     }
+    /* MQTT shall be only saved in AP mode, no need to restart */
+    if (WiFi.isConnected())
+        Restart_device(true);
 }
 
 void onSaveWifi(AsyncWebServerRequest *request)
@@ -142,9 +148,8 @@ void onSaveWifi(AsyncWebServerRequest *request)
             ssid = value;
         if (name == "pwd")
             Set_wifi_credentials(ssid.c_str(), value.c_str());
-        if (i == (uint8_t)request->params() - 1)
-            Restart_device(false);
     }
+    Restart_device(false);
 }
 
 void onResetConfig(AsyncWebServerRequest *request)
@@ -258,45 +263,51 @@ void Webserver_start()
                     response->addHeader(F("Content-Encoding"),"gzip");
                     response->addHeader(F("Cache-Control"),"no-cache");
                     request->send(response); });
-
-    webserver.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request)
+    webserver.on("/time_config", HTTP_GET, [](AsyncWebServerRequest *request)
                  {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html",
-                        settings_html, settings_html_size);
+                        time_config_html, time_config_html_size);
                     response->addHeader(F("Content-Encoding"),"gzip");
                     response->addHeader(F("Cache-Control"),"no-cache");
                     request->send(response); });
-
-    webserver.on("/time_configuration", HTTP_GET, [](AsyncWebServerRequest *request)
+    webserver.on("/net_settings", HTTP_GET, [](AsyncWebServerRequest *request)
                  {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html",
-                        time_configuration_html, time_configuration_html_size);
+                        net_settings_html, net_settings_html_size);
                     response->addHeader(F("Content-Encoding"),"gzip");
                     response->addHeader(F("Cache-Control"),"no-cache");
                     request->send(response); });
-
+    webserver.on("/other", HTTP_GET, [](AsyncWebServerRequest *request)
+                 {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html",
+                        other_html, other_html_size);
+                    response->addHeader(F("Content-Encoding"),"gzip");
+                    response->addHeader(F("Cache-Control"),"no-cache");
+                    request->send(response); });
     webserver.on("/bootstrap.min.css", HTTP_GET, [](AsyncWebServerRequest *request)
                  {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/css",
                         bootstrap_min_css, bootstrap_min_css_size);
                     response->addHeader(F("Content-Encoding"),"gzip");
                     response->addHeader(F("Cache-Control"),"no-cache");
                     request->send(response); });
-
     webserver.on("/bootstrap.min.js", HTTP_GET, [](AsyncWebServerRequest *request)
                  {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript",
                         bootstrap_min_js, bootstrap_min_js_size);
                     response->addHeader(F("Content-Encoding"),"gzip");
                     response->addHeader(F("Cache-Control"),"no-cache");
                     request->send(response); });
-
     webserver.on("/index.js", HTTP_GET, [](AsyncWebServerRequest *request)
                  {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript", 
                         index_js, index_js_size);
                     response->addHeader(F("Content-Encoding"),"gzip");
                     response->addHeader(F("Cache-Control"),"no-cache");
                     request->send(response); });
-
-    webserver.on("/settings.js", HTTP_GET, [](AsyncWebServerRequest *request)
+    webserver.on("/net_settings.js", HTTP_GET, [](AsyncWebServerRequest *request)
                  {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript",
-                        settings_js, settings_js_size);
+                        net_settings_js, net_settings_js_size);
+                    response->addHeader(F("Content-Encoding"),"gzip");
+                    response->addHeader(F("Cache-Control"),"no-cache");
+                    request->send(response); });
+    webserver.on("/other.js", HTTP_GET, [](AsyncWebServerRequest *request)
+                 {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript",
+                        other_js, other_js_size);
                     response->addHeader(F("Content-Encoding"),"gzip");
                     response->addHeader(F("Cache-Control"),"no-cache");
                     request->send(response); });
@@ -306,9 +317,9 @@ void Webserver_start()
                     response->addHeader(F("Content-Encoding"),"gzip");
                     response->addHeader(F("Cache-Control"),"no-cache");
                     request->send(response); });
-    webserver.on("/time_configuration.js", HTTP_GET, [](AsyncWebServerRequest *request)
+    webserver.on("/time_config.js", HTTP_GET, [](AsyncWebServerRequest *request)
                  {  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript",
-                        time_configuration_js, time_configuration_js_size);
+                        time_config_js, time_config_js_size);
                     response->addHeader(F("Content-Encoding"),"gzip");
                     response->addHeader(F("Cache-Control"),"no-cache");
                     request->send(response); });

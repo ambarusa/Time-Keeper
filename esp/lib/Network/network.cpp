@@ -30,6 +30,7 @@ void OTA_init()
    ArduinoOTA.onStart([]()
                       { DEBUG_PRINTF("Network: Start OTA updating %s\n",
                            (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem");
+                        Set_clock_state(CLOCK_STATE_OTA);
                          if (ArduinoOTA.getCommand() == U_FS)
                             LittleFS.end(); });
 
@@ -67,8 +68,8 @@ void OTA_init()
  */
 void onWifiDisconnect(const WiFiEventStationModeDisconnected &event)
 {
-   DEBUG_PRINTLN("Network: Disconnected from Wi-Fi.");
-   wifi_status = "Disconnected from Wi-Fi.";
+   DEBUG_PRINTLN("Network: Disconnected from Wi-Fi");
+   wifi_status = "Disconnected from Wi-Fi";
    Set_clock_state(CLOCK_STATE_SERVER_DOWN);
 }
 
@@ -92,6 +93,7 @@ void onWifiConnect(const WiFiEventStationModeGotIP &event)
    Webserver_start();
    Mqtt_connect();
    Set_clock_state(CLOCK_STATE_IP);
+   /* Force set to NTP synchronization, for better experience. */
    Set_manual_mode(false);
 }
 
@@ -99,6 +101,7 @@ void Network_create_AP()
 {
    wifi_status = "AP Mode";
    Set_clock_state(CLOCK_STATE_AP);
+   /* Force set to manual mode, for better experience. */
    Set_manual_mode(true);
    WiFi.disconnect(); // Stop trying to connect to the WiFi.
    WiFi.softAPConfig(apIP, apIP, netMsk);
