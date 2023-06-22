@@ -87,8 +87,9 @@ String Get_mqtt_autodiscovery()
 
 void Set_mqtt_enabled(int enabled)
 {
-   if (mqtt_enabled_u8 == enabled)
-      return;
+   /*! Checking if the MQTT enabled state is equal to the parameter is intentionally skipped.
+       This allows to disable the MQTT even though the connection to an MQTT server couldn't
+       be made, and the system disabled already the MQTT for this runtime. */
    mqtt_enabled_u8 = (boolean)enabled;
    
    if (!mqtt_enabled_u8)
