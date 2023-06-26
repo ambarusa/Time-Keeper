@@ -11,7 +11,7 @@ AsyncWebSocket websocket("/ws");
 
 String processor(const String &var);
 
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
+void handleWebSocketMessage(AsyncWebSocketClient *client, void *arg, uint8_t *data, size_t len)
 {
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
@@ -21,7 +21,40 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
         DEBUG_PRINTF("\nWebserver: Received WS message: %s %s\n", first.c_str(), second.c_str());
 
-        if (first == "LIGHTMODE")
+        if (first == "PAGE")
+        {
+            StaticJsonDocument<512> root;
+            char payload[512];
+            if (second == "INDEX")
+            {
+                root["light_mode"] = Get_light_mode_str();
+                root["brightness"] = String(Get_esp_states().lightBrightness);
+            }
+            else if (second == "TIME")
+            {
+                root["ntp_tz"] = String(Get_ntp_timezone());
+                root["manual_mode"] = String(Get_manual_mode());
+                root["ntp_server"] = Get_ntp_server();
+            }
+            else if (second == "NET")
+            {
+                root["wifi_status"] = Get_wifi_status();
+                root["mqtt_status"] = Get_mqtt_status();
+                root["wifi_ssid"] = Get_wifi_ssid();
+                root["mqtt_en"] = String(Get_mqtt_enabled());
+                root["mqtt_host"] = Get_mqtt_host();
+                root["mqtt_port"] = String(Get_mqtt_port());
+                root["mqtt_qossub"] = String(Get_mqtt_qossub());
+                root["mqtt_qospub"] = String(Get_mqtt_qospub());
+                root["mqtt_cli"] = Get_mqtt_clientid();
+                root["mqtt_user"] = Get_mqtt_username();
+                root["mqtt_autodisc"] = Get_mqtt_autodiscovery();
+            }
+            serializeJson(root, payload);
+            websocket.text(client->id(), payload);
+        }
+
+        else if (first == "LIGHTMODE")
         {
             if (second == "automatic")
                 Set_lightMode(LIGHT_MODE_AUTO);
@@ -179,35 +212,13 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
     switch (type)
     {
     case WS_EVT_CONNECT:
-    {
         DEBUG_PRINTF("\nWebserver: WS client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-        StaticJsonDocument<512> root;
-        root["light_mode"] = Get_light_mode_str();
-        root["brightness"] = String(Get_esp_states().lightBrightness);
-        root["wifi_status"] = Get_wifi_status();
-        root["mqtt_status"] = Get_mqtt_status();
-        root["wifi_ssid"] = Get_wifi_ssid();
-        root["mqtt_en"] = String(Get_mqtt_enabled());
-        root["mqtt_host"] = Get_mqtt_host();
-        root["mqtt_port"] = String(Get_mqtt_port());
-        root["mqtt_qossub"] = String(Get_mqtt_qossub());
-        root["mqtt_qospub"] = String(Get_mqtt_qospub());
-        root["mqtt_cli"] = Get_mqtt_clientid();
-        root["mqtt_user"] = Get_mqtt_username();
-        root["mqtt_autodisc"] = Get_mqtt_autodiscovery();
-        root["ntp_tz"] = String(Get_ntp_timezone());
-        root["manual_mode"] = String(Get_manual_mode());
-        root["ntp_server"] = Get_ntp_server();
-        char payload[512];
-        serializeJson(root, payload);
-        websocket.text(client->id(), payload);
-    }
-    break;
+        break;
     case WS_EVT_DISCONNECT:
         DEBUG_PRINTF("Webserver: WS client #%u disconnected\n", client->id());
         break;
     case WS_EVT_DATA:
-        handleWebSocketMessage(arg, data, len);
+        handleWebSocketMessage(client, arg, data, len);
         break;
     case WS_EVT_PONG:
     case WS_EVT_ERROR:

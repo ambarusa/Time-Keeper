@@ -46,7 +46,7 @@ window.addEventListener('unload', onPageUnload);
 function onLoad() {
 
     setActiveNavLink();
-    socket.init(onMessage);
+    socket.init(onMessage, "INDEX");
 
     brightness = document.getElementById('brightness');
     document.getElementById("light_form").addEventListener('change', processSlider);

@@ -50,7 +50,7 @@ function onLoad() {
     mqtt_fields = document.getElementById('mqtt_fields');
 
     setActiveNavLink();
-    socket.init(onMessage);
+    socket.init(onMessage, "NET");
 
     /* Handling MQTT Enabled Checkbox */
     mqtt_enabled.addEventListener('change', processMQTTFields);

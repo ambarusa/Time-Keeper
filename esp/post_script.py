@@ -1,7 +1,6 @@
 Import("env")
 import os
 import shutil
-import esptool
 
 def post_program_action(source, target, env):
 

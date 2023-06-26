@@ -42,7 +42,7 @@ function onLoad() {
     ntp_fields = document.getElementById('ntp_fields');
 
     setActiveNavLink();
-    socket.init(onMessage)
+    socket.init(onMessage, "TIME");
 
     /* Handling Manual Mode Checkbox */
     manual_mode.addEventListener('change', processTimeFields);

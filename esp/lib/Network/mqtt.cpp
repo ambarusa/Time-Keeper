@@ -47,10 +47,10 @@ void Mqtt_discovery_publish();
 
 String Get_mqtt_status()
 {
-   /* This check is necessary for better user experience in AP mode */
-   if (mqtt_enabled_u8 && !WiFi.isConnected())
-      mqtt_status = "Not connecting while in AP mode";
-   return mqtt_status;
+   String result = mqtt_status;
+   if (!WiFi.isConnected())
+      result += " when offline";
+   return result;
 }
 boolean Get_mqtt_enabled()
 {
@@ -91,15 +91,8 @@ void Set_mqtt_enabled(int enabled)
        This allows to disable the MQTT even though the connection to an MQTT server couldn't
        be made, and the system disabled already the MQTT for this runtime. */
    mqtt_enabled_u8 = (boolean)enabled;
-   
    if (!mqtt_enabled_u8)
-   {
       mqtt_status = "Not enabled";
-      /* This check is necessary in AP, when the device doesn't restart */
-      if (!WiFi.isConnected())
-         mqtt_status += " when offline";
-      
-   }
    Memory_write((char *)&mqtt_enabled_u8, EEPROM_MQTT_ENABLED_ADDR, sizeof(mqtt_enabled_u8));
 }
 void Set_mqtt_host(String host)

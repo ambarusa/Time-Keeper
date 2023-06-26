@@ -5,14 +5,15 @@ function onClose(e) {
     socket.init((onMessage), 2000);
 }
 
-function onOpen(e) {
+function onOpen(e, uniqueID) {
     console.log('Connection opened');
+    socket.websocket.send('PAGE ' + uniqueID + ' ');
 }
 
 const socket = {
-    init(onMessage) {
+    init(onMessage, uniqueID) {
         socket.websocket = new WebSocket(gateway);
-        socket.websocket.onopen = onOpen;
+        socket.websocket.onopen = (event) => onOpen(event, uniqueID);
         socket.websocket.onclose = onClose;
         socket.websocket.onmessage = onMessage;
     }
