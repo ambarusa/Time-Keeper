@@ -15,7 +15,11 @@ Ticker task1000msTicker(task1000ms, 1000);
 
 void setup()
 {
+#ifdef DEBUG
+    Serial.begin(115200);
+#else
     Serial.begin(9600);
+#endif
 
     /* Intentional order, memories initialized before used. */
     Memory_init();

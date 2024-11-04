@@ -6,25 +6,25 @@
 
 void Memory_init()
 {
-    EEPROM.begin(4096);
+    EEPROM.begin(512);
     boolean init_needed_b = false;
     uint32_t chipid_u32 = ESP.getChipId();
 
-    char cipid_stored_u32[EEPROM_CHIPID_SIZE];
-    Memory_read((char *)cipid_stored_u32, EEPROM_CHIPID_ADDR, EEPROM_CHIPID_SIZE);
+    char chipid_stored_u32[EEPROM_CHIPID_SIZE];
+    Memory_read((char *)chipid_stored_u32, EEPROM_CHIPID_ADDR, EEPROM_CHIPID_SIZE);
 
     for (int i = 0; i < EEPROM_CHIPID_SIZE; i++)
     {
         uint8_t chipid_byte_u8 = (chipid_u32 >> (8 * i)) & 0xFF;
-        if (cipid_stored_u32[i] != chipid_byte_u8)
+        if (chipid_stored_u32[i] != chipid_byte_u8)
         {
-            cipid_stored_u32[i] = chipid_byte_u8;
+            chipid_stored_u32[i] = chipid_byte_u8;
             init_needed_b = true;
         }
     }
     if (init_needed_b)
     {
-        Memory_write((char *)cipid_stored_u32, EEPROM_CHIPID_ADDR, EEPROM_CHIPID_SIZE);
+        Memory_write((char *)chipid_stored_u32, EEPROM_CHIPID_ADDR, EEPROM_CHIPID_SIZE);
         char buffer[32];
         uint8_t buffer_u8;
 
@@ -70,10 +70,12 @@ void Memory_write(char *data, uint8_t address, uint8_t size_u8)
 {
     for (uint8_t counter_u8 = 0; counter_u8 < size_u8; counter_u8++)
     {
-        char buffer;
+        char buffer;    
         Memory_read((char *)&buffer, (address + counter_u8), sizeof(buffer));
         if (buffer != *(data + counter_u8))
-            EEPROM.write((address + counter_u8), *(data + counter_u8));
+        EEPROM.write((address + counter_u8), *(data + counter_u8));
     }
+    // ESP.wdtDisable();
     EEPROM.commit();
+    // ESP.wdtEnable(WDTO_0MS);
 }

@@ -318,7 +318,7 @@ void Mqtt_connect()
 
 void Mqtt_discovery_publish()
 {
-   StaticJsonDocument<768> root;
+   JsonDocument root;
 
    root["name"] = DEVICE_NAME;
    root["unique_id"] = String(ESP.getChipId()) + "-" + String(DEVICE_NAME);
@@ -336,11 +336,12 @@ void Mqtt_discovery_publish()
    root["effect"] = "true";
    root["effect_state_topic"] = mqtt_effect_topic;
    root["effect_command_topic"] = mqtt_effect_cmd_topic;
-   JsonArray fx_list = root.createNestedArray("effect_list");
+   JsonArray fx_list = root["effect_list"].to<JsonArray>();
    fx_list.add("Manual");
    fx_list.add("Automatic");
 #endif
-   JsonObject device = root.createNestedObject("device");
+   // JsonObject device = root.createNestedObject("device");
+   JsonObject device = root["device"].to<JsonObject>();
    device["identifiers"] = String(ESP.getChipId());
    device["manufacturer"] = "Time-Keeper";
    device["model"] = DEVICE_NAME;
@@ -349,6 +350,7 @@ void Mqtt_discovery_publish()
 
    char payload[768];
    serializeJson(root, payload);
+
    uint16_t id = amqtt_client.publish(mqtt_config_topic, qospub, true, payload);
    DEBUG_PRINTF("MQTT Disovery Send [ID %i]: [%s]: \n%s\n", id, mqtt_config_topic, payload);
 }

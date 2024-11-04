@@ -23,7 +23,7 @@ void handleWebSocketMessage(AsyncWebSocketClient *client, void *arg, uint8_t *da
 
         if (first == "PAGE")
         {
-            StaticJsonDocument<512> root;
+            JsonDocument root;
             char payload[512];
             if (second == "INDEX")
             {
@@ -32,7 +32,7 @@ void handleWebSocketMessage(AsyncWebSocketClient *client, void *arg, uint8_t *da
             }
             else if (second == "TIME")
             {
-                root["ntp_tz"] = String(Get_ntp_timezone());
+                root["ntp_tz"] = String(Get_timezone());
                 root["manual_mode"] = String(Get_manual_mode());
                 root["ntp_server"] = Get_ntp_server();
             }
@@ -80,38 +80,45 @@ void onSaveTime(AsyncWebServerRequest *request)
     response->addHeader(F("Content-Encoding"), "gzip");
     request->send(response);
 
-    String name, value;
-
     DEBUG_PRINTLN("\nWebserver: Time form received\n");
+
     for (int i = 0; i < (uint8_t)request->params(); i++)
     {
-        name = request->getParam(i)->name();
-        value = request->getParam(i)->value();
+        const char *name = request->getParam(i)->name().c_str();
+        const char *value = request->getParam(i)->value().c_str();
 
-        if (value.isEmpty())
+        if (strlen(value) == 0)
             continue;
 
-        DEBUG_PRINTF("Webserver: Received param: %s=%s\n", name.c_str(), value.c_str());
+        DEBUG_PRINTF("Webserver: Received param: %s=%s\n", name, value);
 
-        if (name == "manual")
+        // Check if the parameter is "manual" and handle accordingly
+        if (strcmp(name, "manual") == 0)
         {
-            if (value.toInt())
+            uint32 value_u32 = atoi(value); // Convert value to integer
+
+            if (value_u32)
             {
                 Set_manual_mode(true);
-                Set_timestamp(CLOCK_STATE_VALID, value.toInt());
+                Set_timestamp(CLOCK_STATE_VALID, value_u32);
+                return;
             }
             else
                 Set_manual_mode(false);
         }
-        if (name == "server")
+        // Check if the parameter is "server" and update the NTP server if needed
+        if (strcmp(name, "server") == 0)
         {
             if (!Get_manual_mode())
                 Set_ntp_server(value);
         }
-        if (name == "tz")
+        // Check if the parameter is "server" and update the NTP server if needed
+        if (strcmp(name, "tz") == 0)
         {
-            Set_timezone(value.toInt());
+            Set_timezone(atoi(value));
         }
+        if (WiFi.isConnected())
+            Restart_device(RESTART_SOFT);
     }
 }
 
@@ -155,7 +162,7 @@ void onSaveMqtt(AsyncWebServerRequest *request)
     }
     /* MQTT shall be only saved in AP mode, no need to restart */
     if (WiFi.isConnected())
-        Restart_device(true);
+        Restart_device(RESTART_SOFT);
 }
 
 void onSaveWifi(AsyncWebServerRequest *request)
@@ -182,7 +189,7 @@ void onSaveWifi(AsyncWebServerRequest *request)
         if (name == "pwd")
             Set_wifi_credentials(ssid.c_str(), value.c_str());
     }
-    Restart_device(false);
+    Restart_device(RESTART_HARD);
 }
 
 void onResetConfig(AsyncWebServerRequest *request)
@@ -194,7 +201,7 @@ void onResetConfig(AsyncWebServerRequest *request)
     Memory_reset();
     Network_reset();
 
-    Restart_device(false);
+    Restart_device(RESTART_HARD);
 }
 
 void onRestart(AsyncWebServerRequest *request)
@@ -203,7 +210,7 @@ void onRestart(AsyncWebServerRequest *request)
     response->addHeader(F("Content-Encoding"), "gzip");
     request->send(response);
 
-    Restart_device(false);
+    Restart_device(RESTART_HARD);
 }
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
@@ -366,7 +373,7 @@ String processor(const String &var)
     else if (var == "NTP_SERVER")
         return Get_ntp_server();
     else if (var == "NTP_TZ")
-        return String(Get_ntp_timezone());
+        return String(Get_timezone());
     else if (var == "MQTT_STATUS")
         return Get_mqtt_status();
     else if (var == "MQTT_EN")

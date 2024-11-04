@@ -12,7 +12,7 @@
 
 Ticker device_restart_ticker([]
                              { ESP.restart(); },
-                             2000, 1);
+                             1000, 1);
 
 boolean reset_button_u8 = HIGH; /**<Variable that contains the Reset Button's state */
 boolean send_data_b;
@@ -112,7 +112,7 @@ void Serial_send_message()
     bytes_sent_u8++;
     if (bytes_sent_u8 > SERIAL_MESSAGE_LENGTH)
     {
-        DEBUG_PRINT("\n| Mode: ");
+        DEBUG_PRINT("\nHardware: | Mode: ");
         DEBUG_PRINT(Get_light_mode_str());
         DEBUG_PRINT("| Intensity: ");
         DEBUG_PRINT(states_u24.lightBrightness);
@@ -156,7 +156,7 @@ void Hardware_20ms_task()
         reset_button_u8 = !reset_button_u8;
         Memory_reset();
         Network_reset();
-        Restart_device(true);
+        Restart_device(RESTART_SOFT);
     }
 
     Serial_send_message();

@@ -25,7 +25,7 @@ You can flash your device with OTA, if the current firmware running supports it 
 
 ![](./docs/screenshots/ota_ui.png)
 
-1. Download this UI: [ESP-Ota-UI](https://github.com/Nikfinn99/ESP-Ota-UI/releases). You will need to run the application twice, once for the firmware and once for the filesystem.
+1. Download this UI: [ESP-Ota-UI](https://github.com/Nikfinn99/ESP-Ota-UI/releases).
 2. Download the latest precompiled [`firmware.bin`](https://github.com/ambarusa/Time-Keeper/tree/master/build) file from one of the `build/esp_xxx` directories (depending on your clock type).
 3. Open the Ota UI, go to Devices tab, and add your device by typing a name, and it's IP Address (see left side of the screenshot above).
 

@@ -1,5 +1,8 @@
 #include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <ESP8266HTTPClient.h>
 #include <WiFiUdp.h>
+#include "ArduinoJson.h"
 #include "NTPClient.h"
 #include "hw.h"
 #include "memory.h"
@@ -18,6 +21,14 @@ NTPClient ntp_client(ntp_udp);
 
 boolean manual_mode_b, force_sync_b, skip_ip_b;
 esp_states_t esp_states_u24;
+
+void setup_ntp_client(int timeout)
+{
+    ntp_client.setPoolServerName(ntp_server);
+    ntp_client.setUpdateInterval(timeout);
+    ntp_client.begin();
+    DEBUG_PRINTLN("Clock: Starting NTP Client\n");
+}
 
 void Clock_skip_ip()
 {
@@ -51,7 +62,7 @@ String Get_ntp_server()
 {
     return String(ntp_server);
 }
-int8 Get_ntp_timezone()
+int8 Get_timezone()
 {
     return timezone_s8;
 }
@@ -160,12 +171,7 @@ void Set_clock_state(uint8_t value)
     {
         timestamp_u32 = Get_IPAddress_fragment();
         if (!manual_mode_b)
-        {
-            ntp_client.setPoolServerName(ntp_server);
-            ntp_client.setUpdateInterval(NTP_POLL_TIMEOUT - 5); /* Making sure that the update is earlier than the cyclic check. */
-            ntp_client.begin();
-            DEBUG_PRINTLN("Clock: Starting NTP Client\n");
-        }
+            setup_ntp_client(NTP_POLL_TIMEOUT - 5);
     }
 
     if (esp_states_u24.clockState != CLOCK_STATE_START ||
@@ -173,26 +179,21 @@ void Set_clock_state(uint8_t value)
         esp_states_u24.clockState != CLOCK_STATE_OTA)
         Memory_write((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8));
 }
-void Set_ntp_server(String server)
+void Set_ntp_server(const char *server)
 {
-    force_sync_b = true;
-    /* Save it only if changes, but make a force update every time. */
-    if (!strcmp(ntp_server, server.c_str()))
-    {
-        strcpy(ntp_server, server.c_str());
-        Memory_write(ntp_server, EEPROM_NTP_SERVER_ADDR, EEPROM_NTP_SERVER_SIZE);
-    }
-    ntp_client.setPoolServerName(ntp_server);
-    if (!ntp_client.forceUpdate())
-        ntp_client.begin();
+    // Only update if the server is different
+    if (strncmp(ntp_server, server, EEPROM_NTP_SERVER_SIZE) == 0)
+        return;
+
+    // Set the NTP server in the client and force an update
+    strncpy(ntp_server, server, EEPROM_NTP_SERVER_SIZE);
+    Memory_write(ntp_server, EEPROM_NTP_SERVER_ADDR, EEPROM_NTP_SERVER_SIZE);
 }
 void Set_timezone(int8 value)
 {
     if (timezone_s8 == value)
         return;
 
-    int8 offset = abs(timezone_s8 - value) * ((value > timezone_s8) ? 1 : -1);
-    timestamp_u32 += offset * HOUR_IN_SEC;
     timezone_s8 = value;
     Memory_write((char *)&timezone_s8, EEPROM_TIMEZONE_ADDRESS, sizeof(timezone_s8));
 }
@@ -227,6 +228,11 @@ void Clock_init()
         esp_states_u24.lightBrightness = 100;
         esp_states_u24.lightMode = LIGHT_MODE_MANUAL;
         esp_states_u24.clockState = CLOCK_STATE_START;
+    }
+    else if (!manual_mode_b && esp_states_u24.clockState == CLOCK_STATE_VALID)
+    {
+        setup_ntp_client(0);
+        force_sync_b = true;
     }
 }
 

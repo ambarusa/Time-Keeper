@@ -18,6 +18,9 @@ void Hardware_init();
 void Hardware_20ms_task();
 void Hardware_1000ms_task();
 
+#define RESTART_HARD  false
+#define RESTART_SOFT  true
+
 void Restart_device(boolean soft_b);
 
 extern boolean Get_reset_button_state();
