@@ -117,9 +117,9 @@ void onSaveTime(AsyncWebServerRequest *request)
         {
             Set_timezone(atoi(value));
         }
-        if (WiFi.isConnected())
-            Restart_device(RESTART_SOFT);
     }
+    if (WiFi.isConnected())
+        Restart_device(RESTART_SOFT);
 }
 
 void onSaveMqtt(AsyncWebServerRequest *request)
