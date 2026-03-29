@@ -1,16 +1,28 @@
 #include <ArduinoOTA.h>
 #include <LittleFS.h>
 #include <String.h>
+#ifdef ESP32
+#include <WiFi.h>
+#include <ESPmDNS.h>
+#include <AsyncTCP.h>
+#else
+#include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
-#include <user_interface.h>
+#include <ESPAsyncTCP.h>
+#endif
 #include <DNSServer.h>
 #include "Ticker.h"
 #include "hw.h"
 #include "memory.h"
 #include "network.h"
 
+#ifdef ESP32
+WiFiEventId_t wifiConnectHandler;
+WiFiEventId_t wifiDisconnectHandler;
+#else
 WiFiEventHandler wifiConnectHandler;    /**< Handling Wi-Fi connect event. */
 WiFiEventHandler wifiDisconnectHandler; /**< Handling Wi-Fi disconnect event. */
+#endif
 
 String wifi_status = "Not connected.";
 boolean was_connected_b = false; /**< This will prevent to create an AP, if the connection is lost during runtime. */
@@ -60,27 +72,26 @@ void OTA_init()
    DEBUG_PRINTLN("Network: OTA ready");
 }
 
-/**
- * @brief WiFi disconnect callback function.
- *
- * Currently used only for debugging.
- *
- */
-void onWifiDisconnect(const WiFiEventStationModeDisconnected &event)
+void onWifiDisconnect(
+#ifdef ESP32
+    WiFiEvent_t event, WiFiEventInfo_t info
+#else
+    const WiFiEventStationModeDisconnected &event
+#endif
+)
 {
    DEBUG_PRINTLN("Network: Disconnected from Wi-Fi");
    wifi_status = "Disconnected from Wi-Fi";
    Set_clock_state(CLOCK_STATE_SERVER_DOWN);
 }
 
-/**
- * @brief WiFi connect callback function.
- *
- * After connecting to the WiFi, the WiFi Manager's webserver has to be stopped,
- * the device's webserver is started instead, and the Mqtt submodule is initialized.
- *
- */
-void onWifiConnect(const WiFiEventStationModeGotIP &event)
+void onWifiConnect(
+#ifdef ESP32
+    WiFiEvent_t event, WiFiEventInfo_t info
+#else
+    const WiFiEventStationModeGotIP &event
+#endif
+)
 {
    DEBUG_PRINTF("Network: Connected to Wi-Fi as %s, IP: %s\n", DEVICE_NAME, WiFi.localIP().toString().c_str());
    create_ap_ticker.stop();
@@ -89,7 +100,11 @@ void onWifiConnect(const WiFiEventStationModeGotIP &event)
    WiFi.setAutoReconnect(true);
    Network_start_MDNS();
    OTA_init();
+#ifdef ESP32
+   wifiDisconnectHandler = WiFi.onEvent(onWifiDisconnect, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+#else
    wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
+#endif
    Webserver_start();
    Mqtt_connect();
    Set_clock_state(CLOCK_STATE_IP);
@@ -120,34 +135,29 @@ void Network_start_MDNS()
       DEBUG_PRINTLN("Network: MDNS begin failed!");
 }
 
-/**
- * @brief Initializing Network components.
- *
- * The function connects the device to the Wi-Fi network, and prepares the own webserver
- * Connecting to the MQTT server is done through the Wi-Fi connected callback function.
- *
- */
 void Network_init()
 {
    Clock_init();
    Mqtt_init();
    WiFi.mode(WIFI_STA);
    WiFi.setHostname(DEVICE_NAME);
+#ifdef ESP32
+   wifiConnectHandler = WiFi.onEvent(onWifiConnect, ARDUINO_EVENT_WIFI_STA_GOT_IP);
+#else
    wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
+#endif
    WiFi.begin();
 }
 
-/**
- * @brief Resetting Network components
- *
- * The function erases all the Wi-Fi credentials, and restarts the device.
- *
- */
 void Network_reset()
 {
    DEBUG_PRINTLN("\nNetwork: Resetting Wifi\n");
    wifiDisconnectHandler = NULL;
+#ifdef ESP32
+   WiFi.disconnect(true, true);
+#else
    ESP.eraseConfig();
+#endif
 }
 
 String Get_wifi_status()
@@ -171,10 +181,14 @@ void Set_wifi_credentials(String ssid, String pwd)
 {
    DEBUG_PRINTF("Network: New Wi-Fi saved: %s\n", ssid.c_str());
    wifiDisconnectHandler = NULL;
+#ifdef ESP32
+   WiFi.begin(ssid.c_str(), pwd.c_str());
+#else
    struct station_config conf;
    memcpy(reinterpret_cast<char *>(conf.ssid), ssid.c_str(), 32);
    memcpy(reinterpret_cast<char *>(conf.password), pwd.c_str(), 64);
    wifi_station_set_config(&conf);
+#endif
 }
 
 void Disable_WifiDisconnectHandler()

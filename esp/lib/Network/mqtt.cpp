@@ -6,6 +6,8 @@
 #include "hw.h"
 
 #define MQTT_RECONN_RETRIES 5
+#define TOPIC_MAX_LEN 64
+
 Ticker mqtt_reconn_ticker(Mqtt_connect, 10000);
 
 boolean mqtt_enabled_u8;
@@ -28,19 +30,19 @@ String availability = "/status";
 String autodiscovery = "homeassistant";
 String mqtt_set_substr = "/set";
 
-char *mqtt_availability_topic;
+char mqtt_availability_topic[TOPIC_MAX_LEN];
 
-char *mqtt_topic;
-char *mqtt_cmd_topic;
-char *mqtt_config_topic;
+char mqtt_topic[TOPIC_MAX_LEN];
+char mqtt_cmd_topic[TOPIC_MAX_LEN];
+char mqtt_config_topic[TOPIC_MAX_LEN];
 
 #if defined(FLEURIE)
 String mqtt_brightness_substr = "/brightness";
 String mqtt_effect_substr = "/effect";
-char *mqtt_brightness_topic;
-char *mqtt_brightness_cmd_topic;
-char *mqtt_effect_topic;
-char *mqtt_effect_cmd_topic;
+char mqtt_brightness_topic[TOPIC_MAX_LEN];
+char mqtt_brightness_cmd_topic[TOPIC_MAX_LEN];
+char mqtt_effect_topic[TOPIC_MAX_LEN];
+char mqtt_effect_cmd_topic[TOPIC_MAX_LEN];
 #endif
 
 void Mqtt_discovery_publish();
@@ -171,7 +173,8 @@ void onMqttConnect(bool sessionPresent)
 
 void onMqttMessage(char *topic, char *payload_raw, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
 {
-   String payload = ((String)payload_raw).substring(0, len);
+   if (len == 0 || len > 100) return; // Safety check
+   String payload = String(payload_raw).substring(0, len);
    DEBUG_PRINTF("\nMQTT: Recieved [%s]: %s\n", topic, payload.c_str());
 
    if (!strcmp(topic, mqtt_cmd_topic))
@@ -266,36 +269,28 @@ void Mqtt_init()
 
    String buffer;
    buffer = String(mqtt_clientid) + availability;
-   mqtt_availability_topic = (char *)malloc(buffer.length());
    strcpy(mqtt_availability_topic, buffer.c_str());
 
    buffer = String(mqtt_clientid) + "/state";
-   mqtt_topic = (char *)malloc(buffer.length());
    strcpy(mqtt_topic, buffer.c_str());
 
    buffer = String(mqtt_topic) + mqtt_set_substr;
-   mqtt_cmd_topic = (char *)malloc(buffer.length());
    strcpy(mqtt_cmd_topic, buffer.c_str());
 
    buffer = autodiscovery + "/light/" + String(mqtt_clientid) + "/config";
-   mqtt_config_topic = (char *)malloc(buffer.length());
    strcpy(mqtt_config_topic, buffer.c_str());
 
 #if defined(FLEURIE)
    buffer = String(mqtt_clientid) + mqtt_brightness_substr;
-   mqtt_brightness_topic = (char *)malloc(buffer.length());
    strcpy(mqtt_brightness_topic, buffer.c_str());
 
    buffer = String(mqtt_brightness_topic) + mqtt_set_substr;
-   mqtt_brightness_cmd_topic = (char *)malloc(buffer.length());
    strcpy(mqtt_brightness_cmd_topic, buffer.c_str());
 
    buffer = String(mqtt_clientid) + mqtt_effect_substr;
-   mqtt_effect_topic = (char *)malloc(buffer.length());
    strcpy(mqtt_effect_topic, buffer.c_str());
 
    buffer = String(mqtt_effect_topic) + mqtt_set_substr;
-   mqtt_effect_cmd_topic = (char *)malloc(buffer.length());
    strcpy(mqtt_effect_cmd_topic, buffer.c_str());
 #endif
 
@@ -348,7 +343,7 @@ void Mqtt_discovery_publish()
    device["name"] = "Time-Keeper";
    device["sw_version"] = "1.0";
 
-   char payload[768];
+   char payload[1024];
    serializeJson(root, payload);
 
    uint16_t id = amqtt_client.publish(mqtt_config_topic, qospub, true, payload);

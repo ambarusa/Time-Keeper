@@ -51,6 +51,7 @@ uint32_t Get_IPAddress_fragment()
             temp = "0" + temp;
         fragment += temp;
         idx_u8++;
+        idx_u8 %= 4; // Prevent overflow
     }
     return fragment.toInt();
 }
@@ -135,7 +136,10 @@ void Set_lightMode(uint8_t value)
         Mqtt_state_publish(mqtt_effect_topic, Get_light_mode_str());
 #endif
     Notify_ws_clients("LIGHTMODE", Get_light_mode_str());
-    if (value != LIGHT_MODE_OFF)
+    if (value != LIGHT_MODE_OFF &&
+        esp_states_u24.clockState != CLOCK_STATE_START &&
+        esp_states_u24.clockState != CLOCK_STATE_IP &&
+        esp_states_u24.clockState != CLOCK_STATE_OTA)
         Memory_write((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8));
 }
 void Set_lightBrightness(uint8_t value)
@@ -150,8 +154,8 @@ void Set_lightBrightness(uint8_t value)
     Mqtt_state_publish(mqtt_brightness_topic, String(value));
 #endif
     Notify_ws_clients("BRIGHTNESS", String(esp_states_u24.lightBrightness));
-    if (esp_states_u24.clockState != CLOCK_STATE_START ||
-        esp_states_u24.clockState != CLOCK_STATE_IP ||
+    if (esp_states_u24.clockState != CLOCK_STATE_START &&
+        esp_states_u24.clockState != CLOCK_STATE_IP &&
         esp_states_u24.clockState != CLOCK_STATE_OTA)
         Memory_write((char *)&esp_states_u24.lightBrightness, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(uint8));
 }
@@ -174,8 +178,8 @@ void Set_clock_state(uint8_t value)
             setup_ntp_client(NTP_POLL_TIMEOUT - 5);
     }
 
-    if (esp_states_u24.clockState != CLOCK_STATE_START ||
-        esp_states_u24.clockState != CLOCK_STATE_IP ||
+    if (esp_states_u24.clockState != CLOCK_STATE_START &&
+        esp_states_u24.clockState != CLOCK_STATE_IP &&
         esp_states_u24.clockState != CLOCK_STATE_OTA)
         Memory_write((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8));
 }
@@ -202,8 +206,8 @@ void Set_timestamp(uint8 state, uint32 value)
     Set_clock_state((clock_states_t)state);
     timestamp_u32 = value + timezone_s8 * HOUR_IN_SEC;
 
-    if (esp_states_u24.clockState != CLOCK_STATE_START ||
-        esp_states_u24.clockState != CLOCK_STATE_IP ||
+    if (esp_states_u24.clockState != CLOCK_STATE_START &&
+        esp_states_u24.clockState != CLOCK_STATE_IP &&
         esp_states_u24.clockState != CLOCK_STATE_OTA)
     {
         for (int i = 0; i < EEPROM_TIMESTAMP_SIZE; i++)

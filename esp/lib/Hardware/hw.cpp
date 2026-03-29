@@ -8,14 +8,15 @@
 #define RESET_TIMEOUT 250 /**< Used for the Reset Switch; It's used in a 20ms task, so 250 * 20ms = 5 sec */
 
 #define SERIAL_SYNC_FRAME 0x55
-#define SERIAL_MESSAGE_LENGTH 7
+#define SERIAL_MESSAGE_LENGTH 8
 
-Ticker device_restart_ticker([]
+Ticker device_restart_ticker([]()
                              { ESP.restart(); },
                              1000, 1);
 
-boolean reset_button_u8 = HIGH; /**<Variable that contains the Reset Button's state */
-boolean send_data_b;
+static boolean reset_button_u8 = HIGH; /**<Variable that contains the Reset Button's state */
+static boolean send_data_b;
+static boolean reset_in_progress = false;
 
 void Restart_device(boolean soft_b)
 {
@@ -110,7 +111,7 @@ void Serial_send_message()
         break;
     }
     bytes_sent_u8++;
-    if (bytes_sent_u8 > SERIAL_MESSAGE_LENGTH)
+    if (bytes_sent_u8 >= SERIAL_MESSAGE_LENGTH)
     {
         DEBUG_PRINT("\nHardware: | Mode: ");
         DEBUG_PRINT(Get_light_mode_str());
@@ -151,9 +152,9 @@ void Hardware_20ms_task()
 
     device_restart_ticker.update();
 
-    if (Get_reset_button_state())
+    if (Get_reset_button_state() && !reset_in_progress)
     {
-        reset_button_u8 = !reset_button_u8;
+        reset_in_progress = true;
         Memory_reset();
         Network_reset();
         Restart_device(RESTART_SOFT);
@@ -172,7 +173,7 @@ void Hardware_1000ms_task()
 {
     send_data_b = true;
 
-    static boolean ledState;
-    ledState = !ledState;
-    digitalWrite(LED_BUILTIN, ledState);
+    static boolean led_state = LOW;
+    led_state = !led_state;
+    digitalWrite(LED_BUILTIN, led_state);
 }
