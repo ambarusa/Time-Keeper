@@ -1,14 +1,19 @@
+#include "memory.h"
+
 #include <EEPROM.h>
-#include <Arduino.h>
 #include "hw.h"
 #include "network.h"
-#include "memory.h"
 
 void Memory_init()
 {
     EEPROM.begin(512);
     boolean init_needed_b = false;
+
+    #ifdef ESP32
+    uint32_t chipid_u32 = (uint32_t)(ESP.getEfuseMac() & 0xFFFFFFFF);
+    #else
     uint32_t chipid_u32 = ESP.getChipId();
+    #endif
 
     char chipid_stored_u32[EEPROM_CHIPID_SIZE];
     Memory_read((char *)chipid_stored_u32, EEPROM_CHIPID_ADDR, EEPROM_CHIPID_SIZE);

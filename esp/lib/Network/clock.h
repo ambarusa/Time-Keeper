@@ -1,6 +1,8 @@
 #ifndef CLOCK_H_
 #define CLOCK_H_
 
+#include <Arduino.h>
+
 typedef enum
 {
     CLOCK_STATE_START,
@@ -53,13 +55,13 @@ String Get_light_mode_str();
 String Get_clock_state_str();
 boolean Get_manual_mode();
 String Get_ntp_server();
-int8 Get_timezone();
+int8_t Get_timezone();
 void Set_manual_mode(boolean value);
 void Set_clock_state(uint8_t value);
 void Set_lightMode(uint8_t value);
 void Set_lightBrightness(uint8_t value);
 void Set_ntp_server(const char* server);
-void Set_timezone(int8  value);
-void Set_timestamp(uint8 state, uint32 value);
+void Set_timezone(int8_t value);
+void Set_timestamp(uint8_t state, uint32_t value);
 
 #endif /* CLOCK_H_ */

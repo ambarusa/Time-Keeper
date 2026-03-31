@@ -1,12 +1,22 @@
+#include "clock.h"
+
+#ifdef ESP32
+#include <WiFi.h>
+#include <HTTPClient.h>
+#else
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h>
 #include <ESP8266HTTPClient.h>
+#endif
+
+#include <WiFiClient.h>
 #include <WiFiUdp.h>
 #include "ArduinoJson.h"
 #include "NTPClient.h"
 #include "hw.h"
 #include "memory.h"
+#include "mqtt.h"
 #include "network.h"
+#include "webserver.h"
 
 #define HOUR_IN_SEC 3600 /**<Hour in seconds. */
 #define NTP_POLL_TIMEOUT 20 * 60
@@ -14,7 +24,7 @@
 
 uint32_t timestamp_u32;
 char ntp_server[EEPROM_NTP_SERVER_SIZE];
-int8 timezone_s8;
+int8_t timezone_s8;
 
 WiFiUDP ntp_udp;
 NTPClient ntp_client(ntp_udp);
@@ -63,7 +73,7 @@ String Get_ntp_server()
 {
     return String(ntp_server);
 }
-int8 Get_timezone()
+int8_t Get_timezone()
 {
     return timezone_s8;
 }
@@ -140,7 +150,7 @@ void Set_lightMode(uint8_t value)
         esp_states_u24.clockState != CLOCK_STATE_START &&
         esp_states_u24.clockState != CLOCK_STATE_IP &&
         esp_states_u24.clockState != CLOCK_STATE_OTA)
-        Memory_write((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8));
+        Memory_write((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8_t));
 }
 void Set_lightBrightness(uint8_t value)
 {
@@ -157,7 +167,7 @@ void Set_lightBrightness(uint8_t value)
     if (esp_states_u24.clockState != CLOCK_STATE_START &&
         esp_states_u24.clockState != CLOCK_STATE_IP &&
         esp_states_u24.clockState != CLOCK_STATE_OTA)
-        Memory_write((char *)&esp_states_u24.lightBrightness, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(uint8));
+        Memory_write((char *)&esp_states_u24.lightBrightness, EEPROM_BRIGHTNESS_PCT_ADDR, sizeof(uint8_t));
 }
 void Set_clock_state(uint8_t value)
 {
@@ -181,7 +191,7 @@ void Set_clock_state(uint8_t value)
     if (esp_states_u24.clockState != CLOCK_STATE_START &&
         esp_states_u24.clockState != CLOCK_STATE_IP &&
         esp_states_u24.clockState != CLOCK_STATE_OTA)
-        Memory_write((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8));
+        Memory_write((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8_t));
 }
 void Set_ntp_server(const char *server)
 {
@@ -194,7 +204,7 @@ void Set_ntp_server(const char *server)
     ntp_server[EEPROM_NTP_SERVER_SIZE - 1] = '\0';
     Memory_write(ntp_server, EEPROM_NTP_SERVER_ADDR, EEPROM_NTP_SERVER_SIZE);
 }
-void Set_timezone(int8 value)
+void Set_timezone(int8_t value)
 {
     if (timezone_s8 == value)
         return;
@@ -202,7 +212,7 @@ void Set_timezone(int8 value)
     timezone_s8 = value;
     Memory_write((char *)&timezone_s8, EEPROM_TIMEZONE_ADDRESS, sizeof(timezone_s8));
 }
-void Set_timestamp(uint8 state, uint32 value)
+void Set_timestamp(uint8_t state, uint32_t value)
 {
     Set_clock_state((clock_states_t)state);
     timestamp_u32 = value + timezone_s8 * HOUR_IN_SEC;
@@ -221,9 +231,9 @@ void Set_timestamp(uint8 state, uint32 value)
 
 void Clock_init()
 {
-    Memory_read((char *)&manual_mode_b, EEPROM_MANUAL_MODE_ADDR, sizeof(uint8));
-    Memory_read((char *)&timezone_s8, EEPROM_TIMEZONE_ADDRESS, sizeof(uint8));
-    Memory_read((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8));
+    Memory_read((char *)&manual_mode_b, EEPROM_MANUAL_MODE_ADDR, sizeof(uint8_t));
+    Memory_read((char *)&timezone_s8, EEPROM_TIMEZONE_ADDRESS, sizeof(uint8_t));
+    Memory_read((char *)&esp_states_u24.state, EEPROM_ESP_STATE_ADDR, sizeof(uint8_t));
     Memory_read((char *)&timestamp_u32, EEPROM_TIMESTAMP_ADDR, EEPROM_TIMESTAMP_SIZE);
     Memory_read((char *)ntp_server, EEPROM_NTP_SERVER_ADDR, EEPROM_NTP_SERVER_SIZE);
 
@@ -285,7 +295,7 @@ void Clock_task_1000ms()
     case CLOCK_STATE_SERVER_DOWN:
     case CLOCK_STATE_VALID:
     case CLOCK_STATE_AP:
-        static uint16 sync_timeout_u16 = NTP_POLL_TIMEOUT;
+        static uint16_t sync_timeout_u16 = NTP_POLL_TIMEOUT;
         if (!manual_mode_b && (!sync_timeout_u16 || force_sync_b))
         {
             if (ntp_client.isTimeSet())

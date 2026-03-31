@@ -1,6 +1,8 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
+#include <Arduino.h>
+
 #define EEPROM_CHIPID_ADDR 0
 #define EEPROM_CHIPID_SIZE 4
 

@@ -1,9 +1,7 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
-#include "webserver.h"
-#include "mqtt.h"
-#include "clock.h"
+#include <Arduino.h>
 
 #if defined(FLEURIE)
 #define DEVICE_NAME "Fleurie"

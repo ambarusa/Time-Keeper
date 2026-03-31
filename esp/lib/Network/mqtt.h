@@ -1,11 +1,14 @@
 #ifndef MQTT_H
 #define MQTT_H
 
+#include <Arduino.h>
 #include "AsyncMqttClient.h"
 
-extern char *mqtt_topic;
-extern char *mqtt_effect_topic;
-extern char *mqtt_brightness_topic;
+extern char mqtt_topic[];
+#if defined(FLEURIE)
+extern char mqtt_effect_topic[];
+extern char mqtt_brightness_topic[];
+#endif
 
 void onMqttConnect(bool sessionPresent);
 void onMqttMessage(char *topic, char *payload_raw, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
@@ -13,7 +16,7 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
 
 void Mqtt_init();
 void Mqtt_connect();
-void Mqtt_state_publish(char *topic, String data);
+void Mqtt_state_publish(const char *topic, String data);
 
 String Get_mqtt_status();
 boolean Get_mqtt_enabled();

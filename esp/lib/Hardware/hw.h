@@ -1,8 +1,7 @@
 #ifndef HW_H
 #define HW_H
 
-#include <ESP8266WiFi.h>
-#include <String.h>
+#include <Arduino.h>
 
 #ifdef DEBUG
   #define DEBUG_PRINTLN(x) Serial.println(x)

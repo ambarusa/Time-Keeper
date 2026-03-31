@@ -1,12 +1,22 @@
-#include <String.h>
+#include "mqtt.h"
+
+#ifdef ESP32
+#include <WiFi.h>
+#else
+#include <ESP8266WiFi.h>
+#endif
+
 #include "Ticker.h"
 #include "ArduinoJson.h"
-#include "network.h"
+#include "clock.h"
 #include "memory.h"
+#include "network.h"
+#include "webserver.h"
 #include "hw.h"
 
 #define MQTT_RECONN_RETRIES 5
-#define TOPIC_MAX_LEN 64
+#define TOPIC_MAX_LEN 96
+#define AUTODISCOVERY_MAX_LEN 32
 
 Ticker mqtt_reconn_ticker(Mqtt_connect, 10000);
 
@@ -26,9 +36,9 @@ uint8_t qospub;
 const char *mqtt_birth_payload = "online";
 const char *mqtt_will_payload = "offline";
 
-String availability = "/status";
-String autodiscovery = "homeassistant";
-String mqtt_set_substr = "/set";
+const char availability[] = "/status";
+char autodiscovery[AUTODISCOVERY_MAX_LEN] = "homeassistant";
+const char mqtt_set_substr[] = "/set";
 
 char mqtt_availability_topic[TOPIC_MAX_LEN];
 
@@ -37,8 +47,8 @@ char mqtt_cmd_topic[TOPIC_MAX_LEN];
 char mqtt_config_topic[TOPIC_MAX_LEN];
 
 #if defined(FLEURIE)
-String mqtt_brightness_substr = "/brightness";
-String mqtt_effect_substr = "/effect";
+const char mqtt_brightness_substr[] = "/brightness";
+const char mqtt_effect_substr[] = "/effect";
 char mqtt_brightness_topic[TOPIC_MAX_LEN];
 char mqtt_brightness_cmd_topic[TOPIC_MAX_LEN];
 char mqtt_effect_topic[TOPIC_MAX_LEN];
@@ -46,6 +56,59 @@ char mqtt_effect_cmd_topic[TOPIC_MAX_LEN];
 #endif
 
 void Mqtt_discovery_publish();
+
+static bool Topic_equals(const char *left, const char *right)
+{
+   while (*left != '\0' && *right != '\0')
+   {
+      if (*left != *right)
+         return false;
+
+      ++left;
+      ++right;
+   }
+
+   return *left == *right;
+}
+
+static bool Payload_equals(const char *payload, size_t payload_len, const char *expected)
+{
+   size_t index = 0;
+   while (index < payload_len && expected[index] != '\0')
+   {
+      if (payload[index] != expected[index])
+         return false;
+
+      ++index;
+   }
+
+   return index == payload_len && expected[index] == '\0';
+}
+
+#if defined(FLEURIE)
+static int Parse_positive_int(const char *payload, size_t payload_len)
+{
+   int value = 0;
+   bool has_digit = false;
+
+   for (size_t index = 0; index < payload_len; ++index)
+   {
+      const char current = payload[index];
+      if (current < '0' || current > '9')
+         return has_digit ? value : 0;
+
+      has_digit = true;
+      value = value * 10 + (current - '0');
+   }
+
+   return has_digit ? value : 0;
+}
+#endif
+
+static void Copy_string_setting(char *destination, size_t destination_size, const String &value)
+{
+   value.toCharArray(destination, destination_size);
+}
 
 String Get_mqtt_status()
 {
@@ -99,11 +162,10 @@ void Set_mqtt_enabled(int enabled)
 }
 void Set_mqtt_host(String host)
 {
-   if (!strncmp(mqtt_host, host.c_str(), EEPROM_MQTT_HOST_SIZE))
+   if (host.equals(mqtt_host))
       return;
 
-   strncpy(mqtt_host, host.c_str(), EEPROM_MQTT_HOST_SIZE);
-   mqtt_host[EEPROM_MQTT_HOST_SIZE - 1] = '\0';
+   Copy_string_setting(mqtt_host, EEPROM_MQTT_HOST_SIZE, host);
    Memory_write(mqtt_host, EEPROM_MQTT_HOST_ADDR, EEPROM_MQTT_HOST_SIZE);
 }
 void Set_mqtt_port(int port)
@@ -123,34 +185,34 @@ void Set_mqtt_qospub(int pub)
 }
 void Set_mqtt_clientid(String clientid)
 {
-   if (!strncmp(mqtt_clientid, clientid.c_str(), EEPROM_MQTT_CLIENTID_SIZE))
+   if (clientid.equals(mqtt_clientid))
       return;
 
-   strncpy(mqtt_clientid, clientid.c_str(), EEPROM_MQTT_CLIENTID_SIZE);
-   mqtt_clientid[EEPROM_MQTT_CLIENTID_SIZE - 1] = '\0';
+   Copy_string_setting(mqtt_clientid, EEPROM_MQTT_CLIENTID_SIZE, clientid);
    Memory_write((char *)mqtt_clientid, EEPROM_MQTT_CLIENTID_ADDR, EEPROM_MQTT_CLIENTID_SIZE);
 }
 void Set_mqtt_username(String user)
 {
-   if (!strncmp(mqtt_username, user.c_str(), EEPROM_MQTT_USER_SIZE))
+   if (user.equals(mqtt_username))
       return;
 
-   strncpy(mqtt_username, user.c_str(), EEPROM_MQTT_USER_SIZE);
-   mqtt_username[EEPROM_MQTT_USER_SIZE - 1] = '\0';
+   Copy_string_setting(mqtt_username, EEPROM_MQTT_USER_SIZE, user);
    Memory_write((char *)mqtt_username, EEPROM_MQTT_USER_ADDR, EEPROM_MQTT_USER_SIZE);
 }
 void Set_mqtt_password(String pwd)
 {
-   if (!strncmp(mqtt_password, pwd.c_str(), EEPROM_MQTT_PWD_SIZE))
+   if (pwd.equals(mqtt_password))
       return;
 
-   strncpy(mqtt_password, pwd.c_str(), EEPROM_MQTT_PWD_SIZE);
-   mqtt_password[EEPROM_MQTT_PWD_SIZE - 1] = '\0';
+   Copy_string_setting(mqtt_password, EEPROM_MQTT_PWD_SIZE, pwd);
    Memory_write((char *)mqtt_password, EEPROM_MQTT_PWD_ADDR, EEPROM_MQTT_PWD_SIZE);
 }
 void Set_mqtt_autodiscovery(String autodisc)
 {
-   autodiscovery = autodisc;
+   if (autodisc.equals(autodiscovery))
+      return;
+
+   Copy_string_setting(autodiscovery, AUTODISCOVERY_MAX_LEN, autodisc);
 }
 
 void onMqttConnect(bool sessionPresent)
@@ -178,29 +240,29 @@ void onMqttConnect(bool sessionPresent)
 void onMqttMessage(char *topic, char *payload_raw, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
 {
    if (len == 0 || len > 100) return; // Safety check
-   String payload = String(payload_raw, len);
-   DEBUG_PRINTF("\nMQTT: Recieved [%s]: %s\n", topic, payload.c_str());
 
-   if (!strcmp(topic, mqtt_cmd_topic))
+   DEBUG_PRINTF("\nMQTT: Recieved [%s]: %.*s\n", topic, int(len), payload_raw);
+
+   if (Topic_equals(topic, mqtt_cmd_topic))
    {
-      if (payload == "OFF")
+      if (Payload_equals(payload_raw, len, "OFF"))
          Set_lightMode(LIGHT_MODE_OFF);
-      else if (payload == "ON")
+      else if (Payload_equals(payload_raw, len, "ON"))
          if (Get_esp_states().lightMode == LIGHT_MODE_OFF)
             Set_lightMode(LIGHT_MODE_MANUAL);
    }
 
 #if defined(FLEURIE)
-   if (!strcmp(topic, mqtt_effect_cmd_topic))
+   if (Topic_equals(topic, mqtt_effect_cmd_topic))
    {
-      if (payload == "Manual")
+      if (Payload_equals(payload_raw, len, "Manual"))
          Set_lightMode(LIGHT_MODE_MANUAL);
-      else if (payload == "Automatic")
+      else if (Payload_equals(payload_raw, len, "Automatic"))
          Set_lightMode(LIGHT_MODE_AUTO);
    }
 
-   if (!strcmp(topic, mqtt_brightness_cmd_topic))
-      Set_lightBrightness(payload.toInt());
+   if (Topic_equals(topic, mqtt_brightness_cmd_topic))
+      Set_lightBrightness(Parse_positive_int(payload_raw, len));
 #endif
 }
 
@@ -271,31 +333,16 @@ void Mqtt_init()
       return;
    }
 
-   String buffer;
-   buffer = String(mqtt_clientid) + availability;
-   strcpy(mqtt_availability_topic, buffer.c_str());
-
-   buffer = String(mqtt_clientid) + "/state";
-   strcpy(mqtt_topic, buffer.c_str());
-
-   buffer = String(mqtt_topic) + mqtt_set_substr;
-   strcpy(mqtt_cmd_topic, buffer.c_str());
-
-   buffer = autodiscovery + "/light/" + String(mqtt_clientid) + "/config";
-   strcpy(mqtt_config_topic, buffer.c_str());
+   snprintf(mqtt_availability_topic, sizeof(mqtt_availability_topic), "%s%s", mqtt_clientid, availability);
+   snprintf(mqtt_topic, sizeof(mqtt_topic), "%s/state", mqtt_clientid);
+   snprintf(mqtt_cmd_topic, sizeof(mqtt_cmd_topic), "%s/state%s", mqtt_clientid, mqtt_set_substr);
+   snprintf(mqtt_config_topic, sizeof(mqtt_config_topic), "%s/light/%s/config", autodiscovery, mqtt_clientid);
 
 #if defined(FLEURIE)
-   buffer = String(mqtt_clientid) + mqtt_brightness_substr;
-   strcpy(mqtt_brightness_topic, buffer.c_str());
-
-   buffer = String(mqtt_brightness_topic) + mqtt_set_substr;
-   strcpy(mqtt_brightness_cmd_topic, buffer.c_str());
-
-   buffer = String(mqtt_clientid) + mqtt_effect_substr;
-   strcpy(mqtt_effect_topic, buffer.c_str());
-
-   buffer = String(mqtt_effect_topic) + mqtt_set_substr;
-   strcpy(mqtt_effect_cmd_topic, buffer.c_str());
+   snprintf(mqtt_brightness_topic, sizeof(mqtt_brightness_topic), "%s%s", mqtt_clientid, mqtt_brightness_substr);
+   snprintf(mqtt_brightness_cmd_topic, sizeof(mqtt_brightness_cmd_topic), "%s%s%s", mqtt_clientid, mqtt_brightness_substr, mqtt_set_substr);
+   snprintf(mqtt_effect_topic, sizeof(mqtt_effect_topic), "%s%s", mqtt_clientid, mqtt_effect_substr);
+   snprintf(mqtt_effect_cmd_topic, sizeof(mqtt_effect_cmd_topic), "%s%s%s", mqtt_clientid, mqtt_effect_substr, mqtt_set_substr);
 #endif
 
    amqtt_client.setWill(mqtt_availability_topic, 2, true, mqtt_will_payload, 0);
@@ -320,7 +367,11 @@ void Mqtt_discovery_publish()
    JsonDocument root;
 
    root["name"] = DEVICE_NAME;
+#ifdef ESP32
+   root["unique_id"] = String((uint32_t)(ESP.getEfuseMac() & 0xFFFFFFFF)) + "-" + String(DEVICE_NAME);
+#else
    root["unique_id"] = String(ESP.getChipId()) + "-" + String(DEVICE_NAME);
+#endif
    root["icon"] = "mdi:clock-outline";
    root["availability_topic"] = mqtt_availability_topic;
    root["payload_available"] = mqtt_birth_payload;
@@ -341,7 +392,11 @@ void Mqtt_discovery_publish()
 #endif
    // JsonObject device = root.createNestedObject("device");
    JsonObject device = root["device"].to<JsonObject>();
+#ifdef ESP32
+   device["identifiers"] = String((uint32_t)(ESP.getEfuseMac() & 0xFFFFFFFF));
+#else
    device["identifiers"] = String(ESP.getChipId());
+#endif
    device["manufacturer"] = "Time-Keeper";
    device["model"] = DEVICE_NAME;
    device["name"] = "Time-Keeper";
@@ -350,17 +405,19 @@ void Mqtt_discovery_publish()
    char payload[1024];
    serializeJson(root, payload);
 
-   uint16_t id = amqtt_client.publish(mqtt_config_topic, qospub, true, payload);
-   DEBUG_PRINTF("MQTT Disovery Send [ID %i]: [%s]: \n%s\n", id, mqtt_config_topic, payload);
+   uint16_t publish_id = amqtt_client.publish(mqtt_config_topic, qospub, true, payload);
+   (void)publish_id;
+   DEBUG_PRINTF("MQTT Disovery Send [ID %i]: [%s]: \n%s\n", publish_id, mqtt_config_topic, payload);
 }
 
-void Mqtt_state_publish(char *topic, String data)
+void Mqtt_state_publish(const char *topic, String data)
 {
    if (!mqtt_enabled_u8)
       return;
 
-   uint16_t id = amqtt_client.publish(topic, qospub, true, data.c_str());
-   DEBUG_PRINTF("MQTT State Send [ID %i]: [%s]: %s\n", id, topic, data.c_str());
+   uint16_t publish_id = amqtt_client.publish(topic, qospub, true, data.c_str());
+   (void)publish_id;
+   DEBUG_PRINTF("MQTT State Send [ID %i]: [%s]: %s\n", publish_id, topic, data.c_str());
 }
 
 void Mqtt_100ms_task()

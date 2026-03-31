@@ -1,6 +1,7 @@
+#include "network.h"
+
 #include <ArduinoOTA.h>
 #include <LittleFS.h>
-#include <String.h>
 #ifdef ESP32
 #include <WiFi.h>
 #include <ESPmDNS.h>
@@ -12,9 +13,11 @@
 #endif
 #include <DNSServer.h>
 #include "Ticker.h"
+#include "clock.h"
 #include "hw.h"
 #include "memory.h"
-#include "network.h"
+#include "mqtt.h"
+#include "webserver.h"
 
 #ifdef ESP32
 WiFiEventId_t wifiConnectHandler;
@@ -43,7 +46,11 @@ void OTA_init()
                       { DEBUG_PRINTF("Network: Start OTA updating %s\n",
                            (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem");
                         Set_clock_state(CLOCK_STATE_OTA);
+#ifdef ESP32
+                         if (ArduinoOTA.getCommand() == U_SPIFFS)
+#else
                          if (ArduinoOTA.getCommand() == U_FS)
+#endif
                             LittleFS.end(); });
 
    /* Make a clean restart to indicate the update was successful */
@@ -155,7 +162,11 @@ void Network_init()
 void Network_reset()
 {
    DEBUG_PRINTLN("\nNetwork: Resetting Wifi\n");
-   wifiDisconnectHandler = NULL;
+#ifdef ESP32
+   wifiDisconnectHandler = 0;
+#else
+   wifiDisconnectHandler = nullptr;
+#endif
 #ifdef ESP32
    WiFi.disconnect(true, true);
 #else
@@ -183,7 +194,11 @@ String Get_wifi_ip_address()
 void Set_wifi_credentials(String ssid, String pwd)
 {
    DEBUG_PRINTF("Network: New Wi-Fi saved: %s\n", ssid.c_str());
-   wifiDisconnectHandler = NULL;
+#ifdef ESP32
+   wifiDisconnectHandler = 0;
+#else
+   wifiDisconnectHandler = nullptr;
+#endif
 #ifdef ESP32
    WiFi.begin(ssid.c_str(), pwd.c_str());
 #else
@@ -196,7 +211,11 @@ void Set_wifi_credentials(String ssid, String pwd)
 
 void Disable_WifiDisconnectHandler()
 {
-   wifiDisconnectHandler = NULL;
+#ifdef ESP32
+   wifiDisconnectHandler = 0;
+#else
+   wifiDisconnectHandler = nullptr;
+#endif
 }
 
 /**
@@ -214,7 +233,9 @@ void Network_100ms_task()
       dnsServer.processNextRequest();
 
    ArduinoOTA.handle();
+#ifndef ESP32
    MDNS.update();
+#endif
    Mqtt_100ms_task();
 }
 

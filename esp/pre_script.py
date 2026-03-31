@@ -1,8 +1,23 @@
 Import("env")
 import os
 import gzip
-import htmlmin
 import datetime
+import importlib
+
+
+def ensure_python_package(import_name, package_name=None):
+    if importlib.util.find_spec(import_name) is not None:
+        return
+
+    package_name = package_name or import_name
+    print(f"Installing missing Python package: {package_name}")
+    result = env.Execute(f'$PYTHONEXE -m pip install {package_name}')
+    if result != 0:
+        raise RuntimeError(f"Failed to install Python package: {package_name}")
+
+
+ensure_python_package('htmlmin')
+htmlmin = importlib.import_module('htmlmin')
 
 # Path to the output C header file
 header_file_path = 'lib/Network/html_pages.h'

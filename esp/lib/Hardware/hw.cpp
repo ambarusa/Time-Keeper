@@ -1,9 +1,15 @@
-#include "Ticker.h"
 #include "hw.h"
+
+#include "Ticker.h"
+#include "clock.h"
 #include "memory.h"
 #include "network.h"
 
 #define RESET_SW_PIN 5 /**<The digital input pin used by the Reset Config Button.*/
+
+#ifndef LED_BUILTIN
+#define LED_BUILTIN 2
+#endif
 
 #define RESET_TIMEOUT 250 /**< Used for the Reset Switch; It's used in a 20ms task, so 250 * 20ms = 5 sec */
 

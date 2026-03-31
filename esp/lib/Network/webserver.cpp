@@ -1,8 +1,17 @@
-#include <String.h>
+#include "webserver.h"
+
+#ifdef ESP32
+#include <WiFi.h>
+#else
+#include <ESP8266WiFi.h>
+#endif
+
 #include "ESPAsyncWebServer.h"
 #include "ArduinoJson.h"
+#include "clock.h"
 #include "hw.h"
 #include "memory.h"
+#include "mqtt.h"
 #include "network.h"
 #include "html_pages.h"
 
@@ -96,7 +105,7 @@ void onSaveTime(AsyncWebServerRequest *request)
         // Check if the parameter is "manual" and handle accordingly
         if (name == "manual")
         {
-            uint32 value_u32 = value.toInt(); // Convert value to integer
+            uint32_t value_u32 = value.toInt(); // Convert value to integer
 
             if (value_u32)
             {
@@ -229,6 +238,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
     case WS_EVT_DATA:
         handleWebSocketMessage(client, arg, data, len);
         break;
+    case WS_EVT_PING:
     case WS_EVT_PONG:
     case WS_EVT_ERROR:
         break;
@@ -237,7 +247,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 
 void Notify_ws_clients(String key, String data)
 {
-    if (!websocket.getClients().isEmpty())
+    if (!websocket.getClients().empty())
     {
         DEBUG_PRINTF("Webserver: Send [%s %s] to WS clients\n", key.c_str(), data.c_str());
         websocket.textAll(key + " " + data);

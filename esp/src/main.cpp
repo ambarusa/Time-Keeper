@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <EEPROM.h>
 #include "Ticker.h"
 #include "hw.h"
 #include "memory.h"
