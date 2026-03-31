@@ -1,41 +1,34 @@
 let brightness;
 
+function updateBrightnessLabel(value) {
+    const lbl = document.getElementById('brightness_val');
+    if (lbl) lbl.textContent = value + '%';
+}
 
 function processSlider() {
-    if (brightness === null)
-        return;
+    if (!brightness) return;
+    const lightManual = document.getElementById('light_manual');
+    brightness.disabled = !lightManual.checked;
+    updateBrightnessLabel(brightness.disabled ? '--' : brightness.value);
+}
 
-    const lightManual = document.getElementById("light_manual");
-    if (lightManual.checked)
-        brightness.disabled = !lightManual.checked;
-    else
-        brightness.disabled = true;
+function setLightMode(mode) {
+    const el = document.getElementById(('light_' + mode).toLowerCase());
+    if (el) { el.checked = true; processSlider(); }
 }
 
 function onMessage(event) {
-    console.log("WS Message received: " + event.data);
-
+    console.log('WS Message received: ' + event.data);
     try {
-        // parse the JSON data from the message
         const data = JSON.parse(event.data);
-        // set the light mode
-        const id = document.getElementById(("light_" + data.light_mode).toLowerCase());
-        id.checked = true;
-        processSlider();
-        // set the brightness
-        if (brightness !== null) brightness.value = data.brightness;
+        setLightMode(data.light_mode);
+        if (brightness) { brightness.value = data.brightness; updateBrightnessLabel(data.brightness); }
     } catch {
-        // it is not a JSON message
-        const first = event.data.split(" ")[0];
-        const second = event.data.split(" ")[1];
-        switch (first) {
-            case "LIGHTMODE":
-                const id = document.getElementById(("light_" + second).toLowerCase());
-                id.checked = true;
-                processSlider();
-                break;
-            case "BRIGHTNESS":
-                if (brightness !== null) brightness.value = second;
+        const parts = event.data.split(' ');
+        switch (parts[0]) {
+            case 'LIGHTMODE': setLightMode(parts[1]); break;
+            case 'BRIGHTNESS':
+                if (brightness) { brightness.value = parts[1]; updateBrightnessLabel(parts[1]); }
                 break;
         }
     }
@@ -44,20 +37,22 @@ function onMessage(event) {
 window.addEventListener('unload', onPageUnload);
 
 function onLoad() {
-
     setActiveNavLink();
-    socket.init(onMessage, "INDEX");
+    socket.init(onMessage, 'INDEX');
 
     brightness = document.getElementById('brightness');
-    document.getElementById("light_form").addEventListener('change', processSlider);
-    document.getElementById("light_submit").addEventListener('click', function () {
+    if (brightness) {
+        brightness.addEventListener('input', () => updateBrightnessLabel(brightness.value));
+    }
 
-        mode = document.querySelector('input[name="light_mode"]:checked').id;
-
-        socket.websocket.send("LIGHTMODE " + mode.split("_")[1] + " ");
-        if (brightness !== null && mode.split("_")[1] === "manual")
-            socket.websocket.send("BRIGHTNESS " + brightness.value + " ");
-
+    document.getElementById('light_form').addEventListener('change', processSlider);
+    document.getElementById('light_submit').addEventListener('click', () => {
+        const checked = document.querySelector('input[name="light_mode"]:checked');
+        if (!checked) return;
+        const mode = checked.id.split('_')[1];
+        socket.websocket.send('LIGHTMODE ' + mode + ' ');
+        if (brightness && !brightness.disabled)
+            socket.websocket.send('BRIGHTNESS ' + brightness.value + ' ');
     });
 }
 

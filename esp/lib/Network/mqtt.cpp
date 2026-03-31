@@ -99,10 +99,11 @@ void Set_mqtt_enabled(int enabled)
 }
 void Set_mqtt_host(String host)
 {
-   if (!strcmp(mqtt_host, host.c_str()))
+   if (!strncmp(mqtt_host, host.c_str(), EEPROM_MQTT_HOST_SIZE))
       return;
 
-   strcpy(mqtt_host, host.c_str());
+   strncpy(mqtt_host, host.c_str(), EEPROM_MQTT_HOST_SIZE);
+   mqtt_host[EEPROM_MQTT_HOST_SIZE - 1] = '\0';
    Memory_write(mqtt_host, EEPROM_MQTT_HOST_ADDR, EEPROM_MQTT_HOST_SIZE);
 }
 void Set_mqtt_port(int port)
@@ -122,26 +123,29 @@ void Set_mqtt_qospub(int pub)
 }
 void Set_mqtt_clientid(String clientid)
 {
-   if (!strcmp(mqtt_clientid, clientid.c_str()))
+   if (!strncmp(mqtt_clientid, clientid.c_str(), EEPROM_MQTT_CLIENTID_SIZE))
       return;
 
-   strcpy(mqtt_clientid, clientid.c_str());
+   strncpy(mqtt_clientid, clientid.c_str(), EEPROM_MQTT_CLIENTID_SIZE);
+   mqtt_clientid[EEPROM_MQTT_CLIENTID_SIZE - 1] = '\0';
    Memory_write((char *)mqtt_clientid, EEPROM_MQTT_CLIENTID_ADDR, EEPROM_MQTT_CLIENTID_SIZE);
 }
 void Set_mqtt_username(String user)
 {
-   if (!strcmp(mqtt_username, user.c_str()))
+   if (!strncmp(mqtt_username, user.c_str(), EEPROM_MQTT_USER_SIZE))
       return;
 
-   strcpy(mqtt_username, user.c_str());
+   strncpy(mqtt_username, user.c_str(), EEPROM_MQTT_USER_SIZE);
+   mqtt_username[EEPROM_MQTT_USER_SIZE - 1] = '\0';
    Memory_write((char *)mqtt_username, EEPROM_MQTT_USER_ADDR, EEPROM_MQTT_USER_SIZE);
 }
 void Set_mqtt_password(String pwd)
 {
-   if (!strcmp(mqtt_password, pwd.c_str()))
+   if (!strncmp(mqtt_password, pwd.c_str(), EEPROM_MQTT_PWD_SIZE))
       return;
 
-   strcpy(mqtt_password, pwd.c_str());
+   strncpy(mqtt_password, pwd.c_str(), EEPROM_MQTT_PWD_SIZE);
+   mqtt_password[EEPROM_MQTT_PWD_SIZE - 1] = '\0';
    Memory_write((char *)mqtt_password, EEPROM_MQTT_PWD_ADDR, EEPROM_MQTT_PWD_SIZE);
 }
 void Set_mqtt_autodiscovery(String autodisc)
@@ -174,7 +178,7 @@ void onMqttConnect(bool sessionPresent)
 void onMqttMessage(char *topic, char *payload_raw, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
 {
    if (len == 0 || len > 100) return; // Safety check
-   String payload = String(payload_raw).substring(0, len);
+   String payload = String(payload_raw, len);
    DEBUG_PRINTF("\nMQTT: Recieved [%s]: %s\n", topic, payload.c_str());
 
    if (!strcmp(topic, mqtt_cmd_topic))
@@ -255,7 +259,7 @@ void Mqtt_init()
    Memory_read((char *)&mqtt_enabled_u8, EEPROM_MQTT_ENABLED_ADDR, sizeof(mqtt_enabled_u8));
    Memory_read((char *)mqtt_host, EEPROM_MQTT_HOST_ADDR, EEPROM_MQTT_HOST_SIZE);
    Memory_read((char *)&mqtt_port_u16, EEPROM_MQTT_PORT_ADDR, EEPROM_MQTT_PORT_SIZE);
-   Memory_read((char *)&mqtt_clientid, EEPROM_MQTT_CLIENTID_ADDR, EEPROM_MQTT_CLIENTID_SIZE);
+   Memory_read((char *)mqtt_clientid, EEPROM_MQTT_CLIENTID_ADDR, EEPROM_MQTT_CLIENTID_SIZE);
    Memory_read((char *)mqtt_username, EEPROM_MQTT_USER_ADDR, EEPROM_MQTT_USER_SIZE);
    Memory_read((char *)mqtt_password, EEPROM_MQTT_PWD_ADDR, EEPROM_MQTT_PWD_SIZE);
    Memory_read((char *)&qossub, EEPROM_MQTT_QOSSUB_ADDR, sizeof(qossub));

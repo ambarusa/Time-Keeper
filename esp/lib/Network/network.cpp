@@ -95,17 +95,20 @@ void onWifiConnect(
 {
    DEBUG_PRINTF("Network: Connected to Wi-Fi as %s, IP: %s\n", DEVICE_NAME, WiFi.localIP().toString().c_str());
    create_ap_ticker.stop();
-   was_connected_b = true;
    wifi_status = "Connected to " + WiFi.SSID();
    WiFi.setAutoReconnect(true);
    Network_start_MDNS();
-   OTA_init();
+   if (!was_connected_b)
+   {
+      was_connected_b = true;
 #ifdef ESP32
-   wifiDisconnectHandler = WiFi.onEvent(onWifiDisconnect, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+      wifiDisconnectHandler = WiFi.onEvent(onWifiDisconnect, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
 #else
-   wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
+      wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
 #endif
-   Webserver_start();
+      OTA_init();
+      Webserver_start();
+   }
    Mqtt_connect();
    Set_clock_state(CLOCK_STATE_IP);
    /* Force set to NTP synchronization, for better experience. */

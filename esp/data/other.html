@@ -10,6 +10,11 @@
     <link href="bootstrap.min.css" rel="stylesheet">
 
     <title>%DEV_NAME% - Other</title>
+    <style>
+        body { background: #f0f2f5; }
+        .card { border: none; border-radius: .75rem; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+        .card-header { background: #212529; color: #fff; border-radius: .75rem .75rem 0 0 !important; letter-spacing: .02em; }
+    </style>
 </head>
 
 <body class="d-flex flex-column vh-100">
@@ -20,11 +25,9 @@
         <!-- Other -->
         <div class="card col-lg-6 mx-auto mb-5">
             <h5 class="card-header">Other</h5>
-            <div class="card-body d-grid mx-auto">
-                <button type="submit" class="btn btn-primary btn-lg" id="restart_sw">Restart Device</button>
-            </div>
-            <div class="card-body d-grid mx-auto">
-                <button type="submit" class="btn btn-danger btn-lg" id="reset_sw">Reset Settings</button>
+            <div class="card-body d-flex justify-content-center gap-3 py-4">
+                <button type="button" class="btn btn-primary btn-lg px-4" id="restart_sw">Restart Device</button>
+                <button type="button" class="btn btn-danger btn-lg px-4" id="reset_sw">Reset Settings</button>
             </div>
         </div>
     </main>

@@ -10,6 +10,12 @@
     <link href="bootstrap.min.css" rel="stylesheet">
 
     <title>%DEV_NAME% - Network Settings</title>
+    <style>
+        body { background: #f0f2f5; }
+        .card { border: none; border-radius: .75rem; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+        .card-header { background: #212529; color: #fff; border-radius: .75rem .75rem 0 0 !important; letter-spacing: .02em; }
+        .form-label { font-weight: 500; }
+    </style>
 </head>
 
 <body class="d-flex flex-column vh-100">
@@ -20,7 +26,7 @@
         <!-- Wi-Fi -->
         <div class="card col-lg-6 mx-auto mb-5">
             <h5 class="card-header">Wi-Fi Configuration</h5>
-            <h4 class="text-muted mx-auto mt-3"><span id="wifi_status"></span></h4>
+            <p class="text-center text-muted small mt-2 mb-0" id="wifi_status"></p>
             <form class="card-body needs-validation" novalidate action="/save_wifi" method="post" id="wifi_form">
                 <div class="mb-3">
                     <label class="form-label" for="wifi_ssid">SSID</label>
@@ -43,7 +49,7 @@
         <!-- MQTT -->
         <div class="card col-lg-6 mx-auto mb-5">
             <h5 class="card-header">MQTT Configuration</h5>
-            <h4 class="text-muted mx-auto mt-3"><span id="mqtt_status"></span></h4>
+            <p class="text-center text-muted small mt-2 mb-0" id="mqtt_status"></p>
             <form class="card-body needs-validation" novalidate action="/save_mqtt" method="post" id="mqtt_form">
                 <div class="form-group form-check mb-3">
                     <input type="hidden" name="enabled" id="mqtt_en_init" value="0">
@@ -60,7 +66,7 @@
                             <div class="invalid-feedback">Please provide a MQTT Host.</div>
                         </div>
                         <label class="form-label" for="mqtt_port">MQTT Port</label>
-                        <input type="number" class="form-control" type="number" id="mqtt_port" name="port"
+                        <input type="number" class="form-control" id="mqtt_port" name="port"
                             placeholder="MQTT Port (default: 1883)" required>
                         <div class="invalid-feedback">Please provide a port number.</div>
                     </div>

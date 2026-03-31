@@ -28,6 +28,7 @@ void Memory_init()
         char buffer[32];
         uint8_t buffer_u8;
 
+        memset(buffer, 0, sizeof(buffer));
         Memory_write((char *)&(buffer_u8 = 0), EEPROM_RESTART_FLG_ADDR, sizeof(buffer_u8));
         Memory_write((char *)&(buffer_u8 = 1), EEPROM_MANUAL_MODE_ADDR, sizeof(buffer_u8));
         Memory_write((char *)&(buffer_u8 = 0), EEPROM_ESP_STATE_ADDR, sizeof(buffer_u8));
@@ -75,7 +76,5 @@ void Memory_write(char *data, uint8_t address, uint8_t size_u8)
         if (buffer != *(data + counter_u8))
         EEPROM.write((address + counter_u8), *(data + counter_u8));
     }
-    // ESP.wdtDisable();
     EEPROM.commit();
-    // ESP.wdtEnable(WDTO_0MS);
 }

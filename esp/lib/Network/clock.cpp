@@ -191,6 +191,7 @@ void Set_ntp_server(const char *server)
 
     // Set the NTP server in the client and force an update
     strncpy(ntp_server, server, EEPROM_NTP_SERVER_SIZE);
+    ntp_server[EEPROM_NTP_SERVER_SIZE - 1] = '\0';
     Memory_write(ntp_server, EEPROM_NTP_SERVER_ADDR, EEPROM_NTP_SERVER_SIZE);
 }
 void Set_timezone(int8 value)

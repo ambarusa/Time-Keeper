@@ -82,20 +82,21 @@ void onSaveTime(AsyncWebServerRequest *request)
 
     DEBUG_PRINTLN("\nWebserver: Time form received\n");
 
+    String name, value;
     for (int i = 0; i < (uint8_t)request->params(); i++)
     {
-        const char *name = request->getParam(i)->name().c_str();
-        const char *value = request->getParam(i)->value().c_str();
+        name = request->getParam(i)->name();
+        value = request->getParam(i)->value();
 
-        if (strlen(value) == 0)
+        if (value.isEmpty())
             continue;
 
-        DEBUG_PRINTF("Webserver: Received param: %s=%s\n", name, value);
+        DEBUG_PRINTF("Webserver: Received param: %s=%s\n", name.c_str(), value.c_str());
 
         // Check if the parameter is "manual" and handle accordingly
-        if (strcmp(name, "manual") == 0)
+        if (name == "manual")
         {
-            uint32 value_u32 = atoi(value); // Convert value to integer
+            uint32 value_u32 = value.toInt(); // Convert value to integer
 
             if (value_u32)
             {
@@ -107,15 +108,15 @@ void onSaveTime(AsyncWebServerRequest *request)
                 Set_manual_mode(false);
         }
         // Check if the parameter is "server" and update the NTP server if needed
-        if (strcmp(name, "server") == 0)
+        if (name == "server")
         {
             if (!Get_manual_mode())
-                Set_ntp_server(value);
+                Set_ntp_server(value.c_str());
         }
-        // Check if the parameter is "server" and update the NTP server if needed
-        if (strcmp(name, "tz") == 0)
+        // Check if the parameter is "tz" and update the timezone if needed
+        if (name == "tz")
         {
-            Set_timezone(atoi(value));
+            Set_timezone(value.toInt());
         }
     }
     if (WiFi.isConnected())
@@ -171,7 +172,7 @@ void onSaveWifi(AsyncWebServerRequest *request)
     response->addHeader(F("Content-Encoding"), "gzip");
     request->send(response);
 
-    String name, value, ssid;
+    String name, value, ssid, pwd;
 
     DEBUG_PRINTLN("\nWebserver: Wi-Fi form received\n");
     for (int i = 0; i < (uint8_t)request->params(); i++)
@@ -187,8 +188,9 @@ void onSaveWifi(AsyncWebServerRequest *request)
         if (name == "ssid")
             ssid = value;
         if (name == "pwd")
-            Set_wifi_credentials(ssid.c_str(), value.c_str());
+            pwd = value;
     }
+    Set_wifi_credentials(ssid.c_str(), pwd.c_str());
     Restart_device(RESTART_HARD);
 }
 

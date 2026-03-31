@@ -10,6 +10,12 @@
     <link href="bootstrap.min.css" rel="stylesheet">
 
     <title>%DEV_NAME% - Home</title>
+    <style>
+        body { background: #f0f2f5; }
+        .card { border: none; border-radius: .75rem; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+        .card-header { background: #212529; color: #fff; border-radius: .75rem .75rem 0 0 !important; letter-spacing: .02em; }
+        .form-label { font-weight: 500; }
+    </style>
 </head>
 
 <body class="d-flex flex-column vh-100">
@@ -19,16 +25,16 @@
 
         <!-- Light -->
         <div class="card col-lg-6 mx-auto mb-5">
-            <h5 class="card-header">Light</h5>
-            <form class="card-body" id="light_form">
+            <h5 class="card-header">Light Control</h5>
+            <form class="card-body pb-0" id="light_form">
                 <div class="form-check mb-3">
                     <input class="form-check-input" type="radio" name="light_mode" id="light_off">
                     <label class="form-check-label" for="light_off">OFF</label>
                 </div>
                 %LIGHT_FORM%
             </form>
-            <div class="mx-auto mb-3">
-                <button class="btn btn-primary btn-lg" id="light_submit">Submit</button>
+            <div class="d-grid col-6 mx-auto my-3">
+                <button class="btn btn-primary btn-lg" id="light_submit">Apply</button>
             </div>
         </div>
     </main>
