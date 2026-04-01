@@ -27,6 +27,18 @@ WiFiEventHandler wifiConnectHandler;    /**< Handling Wi-Fi connect event. */
 WiFiEventHandler wifiDisconnectHandler; /**< Handling Wi-Fi disconnect event. */
 #endif
 
+Ticker network_reset_ticker([]()
+                            {
+#ifdef ESP32
+                               wifiDisconnectHandler = 0;
+                               WiFi.disconnect(true, true);
+#else
+                               wifiDisconnectHandler = nullptr;
+                               ESP.eraseConfig();
+#endif
+                            },
+                            2000, 1);
+
 String wifi_status = "Not connected.";
 boolean was_connected_b = false; /**< This will prevent to create an AP, if the connection is lost during runtime. */
 
@@ -114,7 +126,7 @@ void onWifiConnect(
 #endif
 )
 {
-   DEBUG_PRINTF("Network: Connected to Wi-Fi as %s, IP: %s\n", Get_device_hostname(), WiFi.localIP().toString().c_str());
+   DEBUG_PRINTF("Network: Connected to Wi-Fi as %s, IP: %s\n", WiFi.getHostname(), WiFi.localIP().toString().c_str());
    create_ap_ticker.stop();
    wifi_status = "Connected to " + WiFi.SSID();
    WiFi.setAutoReconnect(true);
@@ -181,16 +193,7 @@ void Network_init()
 void Network_reset()
 {
    DEBUG_PRINTLN("\nNetwork: Resetting Wifi\n");
-#ifdef ESP32
-   wifiDisconnectHandler = 0;
-#else
-   wifiDisconnectHandler = nullptr;
-#endif
-#ifdef ESP32
-   WiFi.disconnect(true, true);
-#else
-   ESP.eraseConfig();
-#endif
+   network_reset_ticker.start();
 }
 
 String Get_wifi_status()
@@ -238,15 +241,11 @@ void Disable_WifiDisconnectHandler()
 #endif
 }
 
-/**
- * @brief Network's cyclic task @ 100ms
- *
- * The function updates the Wi-Fi manager's webserver, if it's active, and updated the MQTT submodule.
- *
- */
 void Network_100ms_task()
 {
    create_ap_ticker.update();
+   network_reset_ticker.update();
+
    if (!was_connected_b && WiFi.status() != WL_CONNECTED && WiFi.getMode() != WIFI_AP_STA && create_ap_ticker.state() != RUNNING)
       create_ap_ticker.start();
    else if (WiFi.getMode() == WIFI_AP_STA)

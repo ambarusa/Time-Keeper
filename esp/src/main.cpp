@@ -14,6 +14,10 @@ Ticker task1000msTicker(task1000ms, 1000);
 
 void setup()
 {
+#ifdef ESP32
+    esp_log_level_set("*", ESP_LOG_NONE);
+#endif
+
 #ifdef DEBUG
     Serial.begin(115200);
 #else
