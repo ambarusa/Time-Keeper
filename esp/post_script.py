@@ -10,9 +10,8 @@ def post_program_action(source, target, env):
     basedir = os.path.basename(startpath)
     destpath = os.path.normpath(os.path.join(startpath, '../../../../build', basedir))
 
-    print("\nCopying " + filename + " file to the build directory...\n")
-    print("Target file: " + targetfile)
-    print("Destination directory: " + destpath)
+    print("POST SCRIPT: Copying " + filename + " file to the build directory...")
+    print("POST SCRIPT: Destination file: " + os.path.join(destpath, filename))
 
     # create directories if they don't exist
     if not os.path.exists(destpath):
@@ -23,4 +22,3 @@ def post_program_action(source, target, env):
         shutil.copy(targetfile, destpath)
 
 env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", post_program_action)
-env.AddPostAction("$BUILD_DIR/littlefs.bin", post_program_action)

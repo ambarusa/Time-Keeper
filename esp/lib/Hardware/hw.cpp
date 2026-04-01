@@ -139,6 +139,10 @@ void Hardware_init()
     pinMode(RESET_SW_PIN, INPUT_PULLUP);
     pinMode(LED_BUILTIN, OUTPUT);
 
+#ifdef ESP32
+    esp_log_level_set("*", ESP_LOG_NONE);
+#endif
+
     uint8_t restart_flg_u8 = 0;
     Memory_read((char *)&restart_flg_u8, EEPROM_RESTART_FLG_ADDR, sizeof(uint8_t));
 

@@ -13,7 +13,12 @@
 #include "memory.h"
 #include "mqtt.h"
 #include "network.h"
-#include "html_pages.h"
+
+#ifdef FLEURIE
+#include "html_pages_fleurie.h"
+#elif PIXIE
+#include "html_pages_pixie.h"
+#endif
 
 AsyncWebServer webserver(80);
 AsyncWebSocket websocket("/ws");

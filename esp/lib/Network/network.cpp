@@ -34,7 +34,7 @@ DNSServer dnsServer;
 IPAddress apIP(4, 3, 2, 1);
 IPAddress netMsk(255, 255, 255, 0);
 
-static const char* Get_device_hostname()
+static const char *Get_device_hostname()
 {
    static char hostname[32];
    static boolean initialized = false;
@@ -58,7 +58,6 @@ Ticker create_ap_ticker(Network_create_AP, 10000, 1);
 void OTA_init()
 {
    ArduinoOTA.setHostname(DEVICE_NAME);
-   ArduinoOTA.setRebootOnSuccess(false);
    ArduinoOTA.onStart([]()
                       { DEBUG_PRINTF("Network: Start OTA updating %s\n",
                            (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem");
@@ -72,8 +71,7 @@ void OTA_init()
 
    /* Make a clean restart to indicate the update was successful */
    ArduinoOTA.onEnd([]()
-                    { DEBUG_PRINTLN("Network: OTA updating ended");
-                     Restart_device(RESTART_HARD); });
+                    { DEBUG_PRINTLN("Network: OTA updating ended"); });
 
    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
                          { DEBUG_PRINTF("Network: OTA update progress: %u%%\r", (progress / (total / 100))); });
@@ -89,8 +87,7 @@ void OTA_init()
                         else if (error == OTA_RECEIVE_ERROR)
                            DEBUG_PRINTLN("Receive Failed");
                         else if (error == OTA_END_ERROR)
-                           DEBUG_PRINTLN("End Failed");
-                        Restart_device(RESTART_HARD); });
+                           DEBUG_PRINTLN("End Failed"); });
 
    ArduinoOTA.begin();
    DEBUG_PRINTLN("Network: OTA ready");

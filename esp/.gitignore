@@ -1,4 +1,4 @@
 .pio
 .vscode/
-data_gen/
+data_gen_*/
 *.bak
