@@ -58,6 +58,7 @@ Ticker create_ap_ticker(Network_create_AP, 10000, 1);
 void OTA_init()
 {
    ArduinoOTA.setHostname(DEVICE_NAME);
+   ArduinoOTA.setRebootOnSuccess(false);
    ArduinoOTA.onStart([]()
                       { DEBUG_PRINTF("Network: Start OTA updating %s\n",
                            (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem");
@@ -72,7 +73,7 @@ void OTA_init()
    /* Make a clean restart to indicate the update was successful */
    ArduinoOTA.onEnd([]()
                     { DEBUG_PRINTLN("Network: OTA updating ended");
-                     /*Restart_device(RESTART_HARD);*/ });
+                     Restart_device(RESTART_HARD); });
 
    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
                          { DEBUG_PRINTF("Network: OTA update progress: %u%%\r", (progress / (total / 100))); });
@@ -163,9 +164,7 @@ void Network_start_MDNS()
       return;
    }
    DEBUG_PRINTLN("Network: MDNS responder started!");
-// #ifdef ESP32
-//    MDNS.addService("_http", "_tcp", 80);
-// #endif
+   MDNS.addService("_http", "_tcp", 80);
 }
 
 void Network_init()

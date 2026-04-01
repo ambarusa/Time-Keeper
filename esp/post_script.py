@@ -22,12 +22,5 @@ def post_program_action(source, target, env):
     if os.path.exists(targetfile):
         shutil.copy(targetfile, destpath)
 
-    # check if the files to be merged exist - NOT USED 
-    # os.chdir(destpath)
-    # if os.path.exists("firmware.bin") and os.path.exists("littlefs.bin"):
-    #     command = ['--chip', 'esp8266', 'merge_bin', '-o', 'combined.bin', '0x0', 'firmware.bin', '0x300000', 'littlefs.bin']
-    #     print('Using esptool.py %s' % ' '.join(command))
-    #     esptool.main(command)
-
 env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", post_program_action)
 env.AddPostAction("$BUILD_DIR/littlefs.bin", post_program_action)

@@ -114,7 +114,8 @@ OTA flashing works if the device is already running firmware with OTA support.
 1. Download [ESP-Ota-UI](https://github.com/Nikfinn99/ESP-Ota-UI/releases).
 2. Download the matching `firmware.bin` from `build/esp_*`.
 3. Add the device in the OTA tool using its IP address.
-4. Select the binary and upload it as the program image.
+4. **Note:** ESP8266 uses port 8266 as the upload port, while ESP32 uses port 3232.
+5. Select the binary and upload it as the program image.
 
 ## First boot and network setup
 

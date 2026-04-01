@@ -3,6 +3,8 @@ import os
 import gzip
 import datetime
 import importlib
+import hashlib
+import sys
 
 
 def ensure_python_package(import_name, package_name=None):
@@ -11,102 +13,136 @@ def ensure_python_package(import_name, package_name=None):
 
     package_name = package_name or import_name
     print(f"Installing missing Python package: {package_name}")
-    result = env.Execute(f'$PYTHONEXE -m pip install {package_name}')
+    result = env.Execute(f"$PYTHONEXE -m pip install {package_name}")
     if result != 0:
         raise RuntimeError(f"Failed to install Python package: {package_name}")
 
 
-ensure_python_package('htmlmin')
-htmlmin = importlib.import_module('htmlmin')
+ensure_python_package("htmlmin")
+htmlmin = importlib.import_module("htmlmin")
 
 # Path to the output C header file
-header_file_path = 'lib/Network/html_pages.h'
+header_file_path = "lib/Network/html_pages.h"
 
 # Path to the generated html files
-html_gen_dir = 'data_gen'
+html_gen_dir = "data_gen"
 
 # Path to the HTML file you want to compress
-html_input_dir = 'data'
+html_input_dir = "data"
+
 
 def str_replace(s, search, replacement):
     return s.replace(search, replacement)
 
+
 def write_compressed_data_to_header(filename, compressed_data):
-    var_name = filename.replace('.', '_')
+    var_name = filename.replace(".", "_")
     # Write the name of the compressed data variable
-    with open(header_file_path, 'a') as f:
-        f.write('const uint8_t {}[] PROGMEM = {{\n'.format(var_name))
+    with open(header_file_path, "a") as f:
+        f.write("const uint8_t {}[] PROGMEM = {{\n".format(var_name))
 
         # Write the compressed data as a byte array
         for i, byte in enumerate(compressed_data):
             if i != 0:
                 if i % 16 == 0:
-                    f.write(',\n')
+                    f.write(",\n")
                 else:
-                    f.write(', ')
-            f.write('0x{:02x}'.format(byte))
-        f.write('\n};\n')
+                    f.write(", ")
+            f.write("0x{:02x}".format(byte))
+        f.write("\n};\n")
 
         # Write the constant with the size of the compressed data
-        f.write('const size_t {}_size = {};\n\n'.format(var_name, len(compressed_data)))
+        f.write("const size_t {}_size = {};\n\n".format(var_name, len(compressed_data)))
+
 
 def write_string_data_to_header(filename, data):
-    var_name = filename.replace('.', '_')
+    var_name = filename.replace(".", "_")
     # Generate the C header file containing the HTML data as a char array
-    with open(header_file_path, 'a', encoding='utf-8') as f:
+    with open(header_file_path, "a", encoding="utf-8") as f:
         compressed_code = htmlmin.minify(data, remove_comments=True)
         f.write('const char {}[] PROGMEM = R"=====(\n'.format(var_name))
         f.write(compressed_code)
         f.write(')=====";\n\n')
 
+
 def write_to_file(filename, input_str):
     os.makedirs(html_gen_dir, exist_ok=True)
     filename = os.path.join(html_gen_dir, filename)
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         f.write(input_str)
 
 
-
-
-
 print("\nPRE SCRIPT: Generating web related files and variables...\n")
-build_flags = env.ParseFlags(env['BUILD_FLAGS'])
-device_name = [build_flag for build_flag in build_flags.get('CPPDEFINES') ][0]
+build_flags = env.ParseFlags(env["BUILD_FLAGS"])
+device_name = [build_flag for build_flag in build_flags.get("CPPDEFINES")][0]
 device_name = device_name.lower().capitalize()
-build_date = datetime.datetime.today().strftime('%Y-%m-%d')
+# build_date includes minutes for in-page expiry and debugging (does not control regeneration)
+build_date = datetime.datetime.today().strftime('%Y-%m-%d-%H%M')
+
+
+def compute_html_hash(device_name):
+    hasher = hashlib.sha256()
+    for filename in sorted(os.listdir(html_input_dir)):
+        if filename.endswith('.html'):
+            path = os.path.join(html_input_dir, filename)
+            with open(path, 'rb') as f:
+                hasher.update(f.read())
+    hasher.update(device_name.encode('utf-8'))
+    return hasher.hexdigest()
+
+current_hash = compute_html_hash(device_name)
+
+# Quick early skip if header already generated from same input set
+if os.path.exists(header_file_path):
+    with open(header_file_path, 'r', encoding='utf-8') as hf:
+        first_lines = [next(hf, '').strip() for _ in range(4)]
+
+    old_hash = None
+    old_build_date = None
+    for line in first_lines:
+        if line.startswith('// BuildDate:'):
+            old_build_date = line.split(':', 1)[1].strip()
+        elif line.startswith('// ContentHash:'):
+            old_hash = line.split(':', 1)[1].strip()
+
+    if old_hash == current_hash:
+        print(f"html_pages.h already generated from same content (build_date {old_build_date}), skipping generation.")
+        sys.exit(0)
 
 # Read out specific html chunks to be replaced in the generic html file
-with open(os.path.join(html_input_dir, 'chunk_form_fleurie.html'), 'r') as f:
+with open(os.path.join(html_input_dir, "chunk_form_fleurie.html"), "r") as f:
     form_fleurie = f.read()
-with open(os.path.join(html_input_dir, 'chunk_form_pixie.html'), 'r') as f:
+with open(os.path.join(html_input_dir, "chunk_form_pixie.html"), "r") as f:
     form_pixie = f.read()
-with open(os.path.join(html_input_dir, 'chunk_navbar.html'), 'r') as f:
+with open(os.path.join(html_input_dir, "chunk_navbar.html"), "r") as f:
     navbar = f.read()
-with open(os.path.join(html_input_dir, 'chunk_footer.html'), 'r') as f:
+with open(os.path.join(html_input_dir, "chunk_footer.html"), "r") as f:
     footer = f.read()
 
-# Clear the header file
-with open(header_file_path, 'w') as f:
-    f.write('/* THIS HEADER IS GENERATED BY SCRIPT. DO NOT MODIFY! */\n\n')
+# Clear the header file and include metadata for skip checks
+with open(header_file_path, 'w', encoding='utf-8') as f:
+    f.write('/* THIS HEADER IS GENERATED BY SCRIPT. DO NOT MODIFY! */\n')
+    f.write(f'// BuildDate: {build_date}\n')
+    f.write(f'// ContentHash: {current_hash}\n\n')
 
 # Loop through all files in the directory, except the chunks
 for filename in os.listdir(html_input_dir):
-    if filename.startswith('chunk_'):
+    if filename.startswith("chunk_"):
         continue
 
     # Open the file and read its contents
-    with open(os.path.join(html_input_dir, filename), 'r', encoding='utf-8') as f:
+    with open(os.path.join(html_input_dir, filename), "r", encoding="utf-8") as f:
         file_data = f.read()
 
     # Change device specific chunks in the webpage
-    if filename.endswith('.html'):
+    if filename.endswith(".html"):
         file_data = str_replace(file_data, "%NAVBAR%", navbar)
         file_data = str_replace(file_data, "%FOOTER%", footer)
         file_data = str_replace(file_data, "%DEV_NAME%", device_name)
         file_data = str_replace(file_data, "%BUILD_DATE%", build_date)
-        if device_name == 'Fleurie':
+        if device_name == "Fleurie":
             file_data = str_replace(file_data, "%LIGHT_FORM%", form_fleurie)
-        elif device_name == 'Pixie':
+        elif device_name == "Pixie":
             file_data = str_replace(file_data, "%LIGHT_FORM%", form_pixie)
 
     # Write the data and size to the header file
