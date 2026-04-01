@@ -72,7 +72,7 @@ void OTA_init()
    /* Make a clean restart to indicate the update was successful */
    ArduinoOTA.onEnd([]()
                     { DEBUG_PRINTLN("Network: OTA updating ended");
-                     Restart_device(RESTART_HARD); });
+                     /*Restart_device(RESTART_HARD);*/ });
 
    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
                          { DEBUG_PRINTF("Network: OTA update progress: %u%%\r", (progress / (total / 100))); });

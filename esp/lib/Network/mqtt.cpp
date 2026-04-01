@@ -378,6 +378,7 @@ void Mqtt_discovery_publish()
    root["payload_not_available"] = mqtt_will_payload;
    root["state_topic"] = mqtt_topic;
    root["command_topic"] = mqtt_cmd_topic;
+   root["default_entity_id"] = String("light.") + String(mqtt_clientid);
 #if defined(FLEURIE)
    root["brightness"] = "true";
    root["brightness_scale"] = 100;
