@@ -157,8 +157,8 @@ void Set_lightBrightness(uint8_t value)
     if (esp_states_u24.lightBrightness == value)
         return;
 
-    esp_states_u24.lightBrightness = value % 101;
-    DEBUG_PRINTF("Clock: Brightness set to %i\n", value);
+    esp_states_u24.lightBrightness = (value > 100) ? 100 : value;
+    DEBUG_PRINTF("Clock: Brightness set to %i\n", esp_states_u24.lightBrightness);
 
 #if defined(FLEURIE)
     Mqtt_state_publish(mqtt_brightness_topic, String(value));

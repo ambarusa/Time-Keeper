@@ -18,7 +18,7 @@ void Network_1000ms_task();
 
 String Get_wifi_status();
 String Get_wifi_ssid();
-void Set_wifi_credentials(String ssid, String pwd);
+void Set_wifi_credentials(const char *ssid, const char *pwd);
 void Disable_WifiDisconnectHandler();
 
 #endif

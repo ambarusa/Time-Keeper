@@ -34,6 +34,22 @@ DNSServer dnsServer;
 IPAddress apIP(4, 3, 2, 1);
 IPAddress netMsk(255, 255, 255, 0);
 
+static const char* Get_device_hostname()
+{
+   static char hostname[32];
+   static boolean initialized = false;
+   if (!initialized)
+   {
+#ifdef ESP32
+      snprintf(hostname, sizeof(hostname), "%s-%u", DEVICE_NAME, (uint32_t)(ESP.getEfuseMac() & 0xFFFFFFFF));
+#else
+      snprintf(hostname, sizeof(hostname), "%s-%u", DEVICE_NAME, ESP.getChipId());
+#endif
+      initialized = true;
+   }
+   return hostname;
+}
+
 void Network_create_AP();
 void Network_start_MDNS();
 
@@ -100,7 +116,7 @@ void onWifiConnect(
 #endif
 )
 {
-   DEBUG_PRINTF("Network: Connected to Wi-Fi as %s, IP: %s\n", DEVICE_NAME, WiFi.localIP().toString().c_str());
+   DEBUG_PRINTF("Network: Connected to Wi-Fi as %s, IP: %s\n", Get_device_hostname(), WiFi.localIP().toString().c_str());
    create_ap_ticker.stop();
    wifi_status = "Connected to " + WiFi.SSID();
    WiFi.setAutoReconnect(true);
@@ -131,7 +147,7 @@ void Network_create_AP()
    WiFi.disconnect(); // Stop trying to connect to the WiFi.
    WiFi.softAPConfig(apIP, apIP, netMsk);
    DEBUG_PRINTF("Creating AP, with IP: %s\n", WiFi.softAPIP().toString().c_str());
-   WiFi.softAP(DEVICE_NAME, "12345678");
+   WiFi.softAP(Get_device_hostname(), "12345678");
    dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
    dnsServer.start(53, "*", WiFi.softAPIP());
    Network_start_MDNS();
@@ -142,15 +158,22 @@ void Network_create_AP()
 void Network_start_MDNS()
 {
    if (!MDNS.begin(DEVICE_NAME))
+   {
       DEBUG_PRINTLN("Network: MDNS begin failed!");
+      return;
+   }
+   DEBUG_PRINTLN("Network: MDNS responder started!");
+// #ifdef ESP32
+//    MDNS.addService("_http", "_tcp", 80);
+// #endif
 }
 
 void Network_init()
 {
    Clock_init();
    Mqtt_init();
-   WiFi.mode(WIFI_STA);
    WiFi.setHostname(DEVICE_NAME);
+   WiFi.mode(WIFI_STA);
 #ifdef ESP32
    wifiConnectHandler = WiFi.onEvent(onWifiConnect, ARDUINO_EVENT_WIFI_STA_GOT_IP);
 #else
@@ -191,20 +214,21 @@ String Get_wifi_ip_address()
    return "";
 }
 
-void Set_wifi_credentials(String ssid, String pwd)
+void Set_wifi_credentials(const char *ssid, const char *pwd)
 {
-   DEBUG_PRINTF("Network: New Wi-Fi saved: %s\n", ssid.c_str());
+   DEBUG_PRINTF("Network: New Wi-Fi saved: %s\n", ssid);
 #ifdef ESP32
    wifiDisconnectHandler = 0;
 #else
    wifiDisconnectHandler = nullptr;
 #endif
 #ifdef ESP32
-   WiFi.begin(ssid.c_str(), pwd.c_str());
+   WiFi.begin(ssid, pwd);
 #else
    struct station_config conf;
-   memcpy(reinterpret_cast<char *>(conf.ssid), ssid.c_str(), 32);
-   memcpy(reinterpret_cast<char *>(conf.password), pwd.c_str(), 64);
+   memset(&conf, 0, sizeof(conf));
+   memcpy(reinterpret_cast<char *>(conf.ssid), ssid, min(strlen(ssid), sizeof(conf.ssid) - 1));
+   memcpy(reinterpret_cast<char *>(conf.password), pwd, min(strlen(pwd), sizeof(conf.password) - 1));
    wifi_station_set_config(&conf);
 #endif
 }
